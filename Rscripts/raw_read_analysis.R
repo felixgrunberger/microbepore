@@ -39,7 +39,7 @@ raw_reads_plotting <- function(mydf, myx, myy, myfill, mypalette){
 # data ----
 
 ## directory ====
-dir <- "/Volumes/EX_SSD/"
+dir <- here()
 
 ## sequencing summary data ====
 files          <- list.files(paste0(dir,"/data/summary_data/"), recursive = T, pattern = "sequencing_summary.txt.gz")
@@ -49,21 +49,13 @@ summary_frame  <- pmap_dfr(list(files, str_split_fixed(files, "_seq", n = 2)[,1]
 b_files          <- list.files(paste0(dir,"/data/barcode_data/"), recursive = T, pattern = "txt.gz")
 barcode_frame    <- pmap_dfr(list(b_files), read_barcode)
 
-### merge summary_files with barcode files and detect barcode if not live-demultiplexed, change sample names ####
-summary_frame_f <- summary_frame %>%
-  left_join(as_tibble(barcode_frame), by = c("read_id")) %>%
-  mutate(barcode = ifelse(is.na(barcode_arrangement), barcode, barcode_arrangement)) %>%
-  left_join(bc_to_sample, by = c("seq_run", "barcode")) %>%
-  dplyr::filter(!is.na(sample)) %>%
-  mutate(mode = substr(sample, 1,3))
-
 ## sample_names ====
-bc_to_sample <- data.table(seq_run = c("190123_RNA001_Ecoli",
-                                       rep("201208_PCB109_Ecoli",4),
-                                       rep("201210_PCB109_Ecoli",2),
-                                       rep("210317_DCS109_Ecoli",2),
-                                       "210317_RNA002_Ecoli",
-                                       "210318_RNA002_Ecoli"),
+bc_to_sample <- data.table(seq_run = c("RNA001_Ecoli",
+                                       rep("PCB109_PCR15_Ecoli",4),
+                                       rep("PCB109_PCR12_Ecoli",2),
+                                       rep("DCS109_Ecoli",2),
+                                       "RNA002_Ecoli_run1",
+                                       "RNA002_Ecoli_run2"),
                            barcode = c(rep("no_barcode",1),
                                        paste0(rep("barcode0",4),1:6),
                                        paste0(rep("barcode0",2),1:2),
@@ -79,6 +71,14 @@ bc_to_sample <- data.table(seq_run = c("190123_RNA001_Ecoli",
                                        "DCS109_Ecoli_NOTEX_replicate3",
                                        "RNA002_Ecoli_NOTEX_replicate2",
                                        "RNA002_Ecoli_NOTEX_replicate3"))
+
+### merge summary_files with barcode files and detect barcode if not live-demultiplexed, change sample names ####
+summary_frame_sample <- summary_frame %>%
+  left_join(as_tibble(barcode_frame), by = c("read_id")) %>%
+  mutate(barcode = ifelse(is.na(barcode_arrangement), barcode, barcode_arrangement)) %>%
+  left_join(bc_to_sample, by = c("seq_run", "barcode")) %>%
+  dplyr::filter(!is.na(sample)) %>%
+  mutate(mode = substr(sample, 1,3))
 
 # calculate stats ----
 summary_stats <- summary_frame_sample %>%
@@ -105,7 +105,6 @@ cbf1 <- c("#EFEAFF","#F5AAA3","#CFCFCF", "#F6B2FB", "#ABC2DA")
 
 ## plotting ====
 
-  
 ### Total number of reads - Supplementary Fig. 3A #### 
 raw_reads_plotting(summary_stats, number_of_reads/1000000, sample, mode, cbf1[c(2,5,3)]) +
   geom_bar(stat = "identity", color = "black") +

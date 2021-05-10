@@ -4,9 +4,6 @@
 library(here)
 source(here("Rscripts/load_libraries.R"))
 
-# functions ----
-
-
 # data ---- 
 
 ## Bioanalyzer data - polyA tailing ==== 
