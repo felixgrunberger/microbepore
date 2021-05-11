@@ -146,7 +146,7 @@ GeomSplitViolin <- ggproto("GeomSplitViolin", GeomViolin,
 })
 
 # data ----
-dir <- "/Volumes/EX_SSD/"
+dir <- here()
 
 ## genome data ====
 gff_table      <-  read_in_gff(paste0(dir, "data/genome_data/NC_000913.3.gff3"))
@@ -167,7 +167,7 @@ summary_frame_sample  <- vroom(paste0(dir, "/data/summary_data_overview.tsv")) %
   group_by(sample) %>%
   summarise(all_reads = n(),
             all_bases = sum(sequence_length_template)) %>%
-  mutate(mode = substr(sample, 8,10)) 
+  mutate(mode = substr(sample, 1,3)) 
 
 ## calc total number of mapped reads ==== 
 merged_frame <- left_join(mapped_frame %>%

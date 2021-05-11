@@ -141,7 +141,7 @@ raw_reads_plotting(summary_frame_sample %>% group_by(mode) %>% sample_n(50000),
   stat_density2d(aes(alpha=..level.., fill = mode),color = NA,
                  bins=10, geom="polygon") +
   geom_density2d(color = "black", contour_var = "ndensity", bins = 10, aes(alpha = ..level..)) +
-  xlab("Sequenced length (%)") +
+  xlab("Sequenced length (bases)") +
   ylab("Aligned length (nt)") +
   guides(alpha = F) +
   scale_x_continuous(limits = c(0,3500), expand = c(0,0)) +
