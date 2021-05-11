@@ -142,6 +142,8 @@ gff_table_gc <- gff_table %>%
 files          <- list.files(paste0(dir,"/data/salmon_data_notrimming/"), recursive = T,full.names = T, pattern = "quant.sf")
 salmon_frame   <- pmap_dfr(list(files,str_split_fixed(str_split_fixed(files, "\\/", n = 9)[,8],"_fu",2)[,1]),modify_salmon_output)
 
+fwrite(salmon_frame, here("tables/salmon_table.tsv"), col.names = T, row.names = F, quote = F, sep = "\t")
+
 ### 1 dataset per column, 1 row per gene ####
 salmon_frame_wide <- salmon_frame %>%
   left_join(old_new, by = c("method" = "old_name")) %>%
