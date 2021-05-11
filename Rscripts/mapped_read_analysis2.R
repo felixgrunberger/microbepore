@@ -6,29 +6,6 @@ source(here("Rscripts/load_libraries.R"))
 
 # functions & defs ----
 
-## sample_names ====
-bc_to_sample <- data.table(seq_run = c("RNA001_Ecoli",
-                                       rep("PCB109_PCR15_Ecoli",4),
-                                       rep("PCB109_PCR12_Ecoli",2),
-                                       rep("DCS109_Ecoli",2),
-                                       "RNA002_Ecoli_run1",
-                                       "RNA002_Ecoli_run2"),
-                           barcode = c(rep("no_barcode",1),
-                                       paste0(rep("barcode0",4),1:6),
-                                       paste0(rep("barcode0",2),1:2),
-                                       rep("no_barcode",2)),
-                           sample  = c("RNA001_Ecoli_TEX_replicate1",
-                                       "PCB109_PCR15_Ecoli_NOTEX_replicate4",
-                                       "PCB109_PCR15_Ecoli_NOTEX_replicate5",
-                                       "PCB109_PCR15_Ecoli_TEX_replicate4",
-                                       "PCB109_PCR15_Ecoli_TEX_replicate5",
-                                       "PCB109_PCR12_Ecoli_NOTEX_replicate4",
-                                       "PCB109_PCR12_Ecoli_TEX_replicate4",
-                                       "DCS109_Ecoli_NOTEX_replicate2",
-                                       "DCS109_Ecoli_NOTEX_replicate3",
-                                       "RNA002_Ecoli_NOTEX_replicate2",
-                                       "RNA002_Ecoli_NOTEX_replicate3"))
-
 ## calculate number of mapped reads per gene and join with gff file ====
 mutate_bam_files <- function(inputBAMtable){
   inputBAMtable %>%
@@ -41,7 +18,6 @@ mutate_bam_files <- function(inputBAMtable){
     left_join(gff_table, by = "gene") %>%
     ungroup()
 }
-
 
 ## calculate total counts per feature ====
 calc_bam_counts <- function(inputBAMtable, mode){
@@ -59,15 +35,6 @@ calc_bam_counts <- function(inputBAMtable, mode){
     distinct(type, number_of_reads, number_of_bases,sample, .keep_all = T) %>%
     ungroup() %>%
     dplyr::mutate(type = ifelse(is.na(type) == T, "unknown", as.character(type))) 
-}
-
-raw_reads_plotting <- function(mydf, myx, myy, myfill, mypalette){
-  ggplot(data = mydf, aes(x = {{myx}}, y = {{myy}}, fill = {{myfill}})) +
-    theme_Publication_white() +
-    ylab("") +
-    theme(panel.grid.major.y = element_blank(),
-          panel.grid.major.x = element_line(linetype = "dashed", color = "black")) +
-    scale_fill_manual(values = mypalette)
 }
 
 # load & tidy data ----
