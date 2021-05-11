@@ -25,11 +25,8 @@ read_barcode <- function(input){
 
 raw_reads_plotting <- function(mydf, myx, myy, myfill, mypalette){
   ggplot(data = mydf, aes(x = {{myx}}, y = {{myy}}, fill = {{myfill}})) +
-    #scale_x_continuous(expand = c(0,0), limits = c(0,2.5)) +
-    #geom_bar(stat = "identity", color = "black") +
     theme_Publication_white() +
     ylab("") +
-    #xlab("Number of reads (in Millions)") +
     theme(panel.grid.major.y = element_blank(),
           panel.grid.major.x = element_line(linetype = "dashed", color = "black")) +
     scale_fill_manual(values = mypalette)
@@ -44,6 +41,7 @@ dir <- here()
 ## sequencing summary data ====
 files          <- list.files(paste0(dir,"/data/summary_data/"), recursive = T, pattern = "sequencing_summary.txt.gz")
 summary_frame  <- pmap_dfr(list(files, str_split_fixed(files, "_seq", n = 2)[,1]), grep_summary)
+
 
 ## barcode summary tables from guppy output ====
 b_files          <- list.files(paste0(dir,"/data/barcode_data/"), recursive = T, pattern = "txt.gz")
@@ -80,6 +78,10 @@ summary_frame_sample <- summary_frame %>%
   dplyr::filter(!is.na(sample)) %>%
   mutate(mode = substr(sample, 1,3))
 
+### save to file / (+ how to read in again) ####
+fwrite(summary_frame_sample, paste0(dir, "/data/summary_data_overview.tsv"), sep = "\t",col.names = T, row.names = F)
+summary_frame_sample <- vroom(paste0(dir, "/data/summary_data_overview.tsv"),num_threads = 8)
+
 # calculate stats ----
 summary_stats <- summary_frame_sample %>%
   group_by(sample) %>%
@@ -90,7 +92,7 @@ summary_stats <- summary_frame_sample %>%
   mutate(mode = substr(sample, 1,3)) %>%
   arrange(factor(sample, levels = bc_to_sample$sample[c(1,10,11,8,9,2,4,3,5,6,7)]))
 
-# plotting ----
+# PLOTS ----
 
 ## reorder levels ====
 summary_frame_sample$sample <- factor(summary_frame_sample$sample,
