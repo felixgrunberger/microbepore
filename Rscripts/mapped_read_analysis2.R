@@ -69,7 +69,7 @@ total_frame_all <- left_join(total_frame_plot, summary_frame_sample %>%
 summary_stats <- total_frame_c %>%
   dplyr::filter(type == "CDS") %>% 
   mutate(number_of_bases_p = round(number_of_bases_p, digits = 2),
-         sequencing_depth = round(number_of_bases/length(ecoli_fasta$chr), digits = 2)) %>%
+         sequencing_depth = round(number_of_bases/sum(gff_table$width), digits = 2)) %>%
   arrange(factor(sample, levels = bc_to_sample$sample[c(1,10,11,8,9,2,4,3,5,6,7)]))
 
 # PLOTS ----
@@ -89,9 +89,6 @@ total_frame_plot$sample <- factor(total_frame_plot$sample,
 total_frame_plot$type <- factor(total_frame_plot$type,
                                 levels = c("mRNA", "rRNA", "other_ncRNA"))
 
-
-## color palette ====
-cbf1_high <- c("#EFEAFF", "#ABC2DA","#F6B2FB","#648FFF")
 
 ## plotting ==== 
 

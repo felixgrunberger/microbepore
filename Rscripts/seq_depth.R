@@ -20,7 +20,7 @@ subsample_reads_to_gene <- function(mydf, sample_number){
 }
 
 # load & tidy data ----
-dir <- "/Volumes/EX_SSD/"
+dir <- here()
 
 ## genome data ====
 gff_table      <-  read_in_gff(paste0(dir, "data/genome_data/NC_000913.3.gff3"))
