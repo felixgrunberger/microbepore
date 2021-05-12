@@ -55,9 +55,10 @@ calc_As <- function(input_fq, input_n){
 # load & tidy data ----
 
 ## read in fastq data ====
-dir <- "/Volumes/EX_SSD/"
+dir <- here()
 fl_files       <- list.files(paste0(dir,"/data/fastq_data/"), recursive = T, pattern = ".fastq")
 dataset_names  <- str_split_fixed(str_split_fixed(fl_files, "\\/", n = 2)[,2], ".fastq", 2)[,1]
+
 # > select dataset --> cDNA replicate 2
 i <- 11
 

@@ -6,24 +6,6 @@ source(here("Rscripts/load_libraries.R"))
 
 # functions & defs ----
 
-get_upper_tri <- function(cormat){
-  cormat[upper.tri(cormat)]<- NA
-  return(cormat)
-}
-
-get_lower_tri <- function(cormat){
-  cormat[lower.tri(cormat)]<- NA
-  return(cormat)
-}
-
-get_density <- function(x, y, ...) {
-  dens <- MASS::kde2d(x, y, ...)
-  ix <- findInterval(x, dens$x)
-  iy <- findInterval(y, dens$y)
-  ii <- cbind(ix, iy)
-  return(dens$z[ii])
-}
-
 modify_salmon_output <- function(input, method){
   suppressMessages(vroom(input, num_threads = 8)) %>%
     arrange(desc(NumReads)) %>%

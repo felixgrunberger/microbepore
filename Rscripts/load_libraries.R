@@ -131,6 +131,25 @@ read_in_gff <- function(input_file){
     mutate(gene = str_split_fixed(Parent,"-",2)[,2])
 }
 
+## correlation and more plotting functions ====
+get_upper_tri <- function(cormat){
+  cormat[upper.tri(cormat)]<- NA
+  return(cormat)
+}
+
+get_lower_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+
+get_density <- function(x, y, ...) {
+  dens <- MASS::kde2d(x, y, ...)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+
 ## color palettes ====
 
 ### standard ####
