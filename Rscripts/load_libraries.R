@@ -139,3 +139,8 @@ cbf1 <- c("#EFEAFF","#F5AAA3","#CFCFCF", "#F6B2FB", "#ABC2DA")
 ### highlight ####
 cbf1_high <- c("#EFEAFF", "#ABC2DA","#F6B2FB","#648FFF")
 
+### base identity colors ####
+acgt_colors <- c("#8591B3", "#A1CEC2", "#AD9D86","white", "#6CB8D4")
+
+### ibm-like colors ####
+ibm_colors <- c("#E69F00","#000000", "#B3B3B3","#648FFF")

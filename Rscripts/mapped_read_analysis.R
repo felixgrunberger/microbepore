@@ -6,30 +6,6 @@ source(here("Rscripts/load_libraries.R"))
 
 # functions & defs ----
 
-## sample_names ====
-bc_to_sample <- data.table(seq_run = c("RNA001_Ecoli",
-                                       rep("PCB109_PCR15_Ecoli",4),
-                                       rep("PCB109_PCR12_Ecoli",2),
-                                       rep("DCS109_Ecoli",2),
-                                       "RNA002_Ecoli_run1",
-                                       "RNA002_Ecoli_run2"),
-                           barcode = c(rep("no_barcode",1),
-                                       paste0(rep("barcode0",4),1:6),
-                                       paste0(rep("barcode0",2),1:2),
-                                       rep("no_barcode",2)),
-                           sample  = c("RNA001_Ecoli_TEX_replicate1",
-                                       "PCB109_PCR15_Ecoli_NOTEX_replicate4",
-                                       "PCB109_PCR15_Ecoli_NOTEX_replicate5",
-                                       "PCB109_PCR15_Ecoli_TEX_replicate4",
-                                       "PCB109_PCR15_Ecoli_TEX_replicate5",
-                                       "PCB109_PCR12_Ecoli_NOTEX_replicate4",
-                                       "PCB109_PCR12_Ecoli_TEX_replicate4",
-                                       "DCS109_Ecoli_NOTEX_replicate2",
-                                       "DCS109_Ecoli_NOTEX_replicate3",
-                                       "RNA002_Ecoli_NOTEX_replicate2",
-                                       "RNA002_Ecoli_NOTEX_replicate3"))
-
-
 ## read in BAM file and deal with multi-mapping reads ====
 read_bam_files <- function(inputBAM, method){
   
@@ -77,48 +53,6 @@ annotate_bams <- function(input_mapped, input_remapped, dataset){
               by = "minion_read_name") %>%
     left_join(gff_table, by = "gene")
 }
-
-
-
-raw_reads_plotting <- function(mydf, myx, myy, myfill, mypalette){
-  ggplot(data = mydf, aes(x = {{myx}}, y = {{myy}}, fill = {{myfill}})) +
-    theme_Publication_white() +
-    ylab("") +
-    theme(panel.grid.major.y = element_blank(),
-          panel.grid.major.x = element_line(linetype = "dashed", color = "black")) +
-    scale_fill_manual(values = mypalette)
-}
-
-geom_split_violin <- function(mapping = NULL, data = NULL, stat = "ydensity", position = "identity", ..., 
-                              draw_quantiles = NULL, trim = TRUE, scale = "area", na.rm = FALSE, 
-                              show.legend = NA, inherit.aes = TRUE) {
-  layer(data = data, mapping = mapping, stat = stat, geom = GeomSplitViolin, 
-        position = position, show.legend = show.legend, inherit.aes = inherit.aes, 
-        params = list(trim = trim, scale = scale, draw_quantiles = draw_quantiles, na.rm = na.rm, ...))
-}
-
-GeomSplitViolin <- ggproto("GeomSplitViolin", GeomViolin, 
-                           draw_group = function(self, data, ..., draw_quantiles = NULL) {
-                             data <- transform(data, xminv = x - violinwidth * (x - xmin), xmaxv = x + violinwidth * (xmax - x))
-                             grp <- data[1, "group"]
-                             newdata <- plyr::arrange(transform(data, x = if (grp %% 2 == 1) xminv else xmaxv), if (grp %% 2 == 1) y else -y)
-                             newdata <- rbind(newdata[1, ], newdata, newdata[nrow(newdata), ], newdata[1, ])
-                             newdata[c(1, nrow(newdata) - 1, nrow(newdata)), "x"] <- round(newdata[1, "x"])
-                             
-                             if (length(draw_quantiles) > 0 & !scales::zero_range(range(data$y))) {
-                               stopifnot(all(draw_quantiles >= 0), all(draw_quantiles <=
-                                                                         1))
-                               quantiles <- ggplot2:::create_quantile_segment_frame(data, draw_quantiles)
-                               aesthetics <- data[rep(1, nrow(quantiles)), setdiff(names(data), c("x", "y")), drop = FALSE]
-                               aesthetics$alpha <- rep(1, nrow(quantiles))
-                               both <- cbind(quantiles, aesthetics)
-                               quantile_grob <- GeomPath$draw_panel(both, ...)
-                               ggplot2:::ggname("geom_split_violin", grid::grobTree(GeomPolygon$draw_panel(newdata, ...), quantile_grob))
-                             }
-                             else {
-                               ggplot2:::ggname("geom_split_violin", GeomPolygon$draw_panel(newdata, ...))
-                             }
-})
 
 # data ----
 dir <- here()

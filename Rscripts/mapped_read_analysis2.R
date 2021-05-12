@@ -92,7 +92,7 @@ total_frame_plot$type <- factor(total_frame_plot$type,
 
 ## plotting ==== 
 
-### Proportion of mapped reads to features - Supplementary Fig. 7A ####
+### Proportion of mapped reads to features - Supplementary Fig. 7A #### 
 raw_reads_plotting(total_frame_c, number_of_reads_p, sample, type, cbf1_high) +
   geom_bar(stat = "identity", color = "black") +
   scale_x_continuous(expand = c(0,0), limits = c(0,100)) +
