@@ -147,12 +147,71 @@ tss_peaks_pipe <- function(file_dir, names, map_method, p_f, m_f, gff = ecoli_gf
 }
 
 
+plot_5end_distance <- function(trimtype = c("untrimmed", "trimmed"), compset = c("diff", "SMRT"), output = c("plot", "stats")){
+  
+  inputdf <- if(trimtype == "untrimmed"){tss_data_untrimmed}else{tss_data_trimmed}
+  compdf  <- if(compset == "diff"){tex_tss}else{smrt_tss}
+  
+  # > calc
+  outputdf <- inputdf %>%
+    dplyr::filter(TSS_type == "primary", type == "CDS") %>%
+    dplyr::select(gene, sample, method, UTR5) %>%
+    left_join(compdf, by = "gene") %>%
+    mutate(distance = UTR5.x - UTR5.y) %>%
+    remove_missing(vars = "distance") %>%
+    mutate(mode = substr(sample, 1,3)) 
+  
+  # > reorder levels
+  outputdf$sample <- factor(outputdf$sample,
+                            levels = (bc_to_sample$sample[c(1,10,11,8,9,2,4,3,5,6,7)]))
+  
+  # > plot
+  if(output == "plot"){
+    raw_reads_plotting(outputdf, distance, sample, mode, cbf1[c(2,5,3)]) +
+      facet_grid(rows = vars(sample)) +
+      geom_histogram(binwidth = 1, aes(y=..density..), color = "black") +
+      scale_x_continuous(limits = c(-17,17), expand = c(0,0)) +
+      scale_y_continuous(expand = c(0,0), limits = c(0,0.75)) 
+  }else{
+    outputdf %>%
+      dplyr::filter(distance > -17 & distance < +17) %>%
+      group_by(sample) %>%
+      distinct(gene) %>%
+      summarise(n = n())
+  }
+}
+
+point_cor_ends <-  function(mydf, myx, myy, myfill){
+  df <- {{mydf}} %>%
+    dplyr::filter(!is.na({{myx}}),
+                  !is.na({{myy}})) %>%
+    mutate(density = get_density(({{myx}}), ({{myy}}))) 
+  
+  ggplot(data = df, aes(x = {{myx}}, y = {{myy}}, fill = {{myfill}})) +
+    geom_abline(linetype = "dashed", slope = 1) +
+    geom_point(alpha = 1, shape = 21, color = "black", size = 4) +
+    scale_fill_gradientn(colours = brewer.pal(name = "Blues", n = 9)) +
+    theme_Publication_white() +
+    scale_x_continuous(limits = c(0, 300)) +
+    scale_y_continuous(limits = c(0, 300)) +
+    stat_cor(method = "pearson", label.x = 1) +
+    coord_equal() 
+}
+
+detect_secondary <- function(inputdf,sample_s){
+  inputdf %>%
+    dplyr::filter(sample %in% sample_s, TSS_type %in% c("primary", "secondary")) %>%
+    dplyr::filter(cov >= 5) %>%
+    group_by(id_name) %>%
+    dplyr::mutate(total_n = n(),
+                  group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
+    ungroup()
+}
+
+
 # load & tidy data ----
 
-## genome data ====
 dir <- here()
-ecoli_gff   <- read_in_gff(paste0(dir, "/data/genome_data/NC_000913.3.gff3"))
-ecoli_fasta <- readDNAStringSet(paste0(dir, "/data/genome_data/NC_000913.3.fasta"))
 
 ## Peak tables ====
 
@@ -225,6 +284,86 @@ summary_tss_ONT <-  rbindlist(list(tss_data_trimmed,
   mutate(mode = substr(sample, 1,3)) %>%
   remove_missing(vars = "TSS_type")
 
+## Distance between diff RNA-seq & ONT ====
+end5_comp <- rbindlist(list(tss_data_trimmed,
+                            tss_data_untrimmed)) %>%
+  dplyr::filter(TSS_type == "primary", type == "CDS") %>%
+  dplyr::select(gene, sample, method, UTR5) %>%
+  left_join(tex_tss, by = "gene") %>%
+  mutate(distance = UTR5.x - UTR5.y) %>%
+  remove_missing(vars = "distance") %>%
+  mutate(mode = substr(sample, 1,3)) %>%
+  group_by(sample, method) %>%
+  mutate(distance_p = ifelse(mode != "RNA", sum(distance == 0)/n()*100, sum(distance == -12)/n()*100)) %>%
+  distinct(sample,method, distance_p, mode) 
+
+## REPLICATE comparison ====
+### for point plots ####
+tss_total_comparison <- tss_data_untrimmed %>%
+  dplyr::filter(cov >= 5) %>%
+  dplyr::filter(TSS_type == "primary", type == "CDS") %>%
+  dplyr::select(gene, sample, method, UTR5) %>%
+  rbind(tex_tss %>% mutate(sample = "illumina", 
+                           method = "illumina") %>%
+          dplyr::select(gene, sample, method, UTR5)) %>%
+  rbind(smrt_tss %>% ungroup () %>% mutate(sample = "Smrt_CAP", 
+                                           method = "Smrt_CAP") %>%
+          dplyr::select(gene, sample, method, UTR5)) %>%
+  dplyr::filter(UTR5 >= 0 & !is.na(UTR5) & is.finite(UTR5), UTR5 <= 300) %>%
+  dplyr::select(-method) %>%
+  pivot_wider(names_from = sample, values_from = UTR5, values_fn = {max}) %>%
+  left_join(ecoli_gff) %>%
+  dplyr::filter(!is.na(gene)) 
+
+### for utr5 comparison ####
+utr5 <- tss_total_comparison %>%
+  dplyr::filter(type == "CDS") %>%
+  pivot_longer(cols = 2:14,names_to = "sample", values_to = "UTR5") %>% 
+  mutate(mode = str_sub(sample, 1, 3)) %>%
+  mutate(UTR5 = ifelse(mode == "RNA", UTR5+12, UTR5)) %>%
+  distinct(UTR5, gene, sample, .keep_all = T)
+
+utr5_logo <- tss_data_untrimmed %>%
+  dplyr::filter(sample %in% "PCB109_PCR12_Ecoli_NOTEX_replicate4", 
+                TSS_type %in% "primary", 
+                type == "CDS", cov >= 3) %>%
+  distinct(gene, .keep_all = T) %>%
+  rowwise() %>%
+  dplyr::mutate(tss_sequence = ifelse(strand == "+", as.character(ecoli_fasta$chr[(TSS-40):(TSS)]),
+                                      as.character(reverseComplement(ecoli_fasta$chr[(TSS):(TSS+40)])))) %>%
+  dplyr::select(tss_sequence) 
+
+### correlation matrix ####
+#### pairwise complete Pearson correlation ####
+res             <- cor(tss_total_comparison[c(2,11,12,9,10,3,5,4,6,7,8)],  
+                       method = "pearson", use = "pairwise.complete.obs")
+res_gg          <- reshape2::melt(get_upper_tri(res))
+
+#### pairwise complete Pearson observations ####
+res_counts      <- pairwiseCount(tss_total_comparison[c(2,11,12,9,10,3,5,4,6,7,8)], diagonal = F)
+res_counts_gg   <- reshape2::melt(get_lower_tri(res_counts))
+
+### compare secondary & primary ONT to SMRT ####
+c_SMRT_sec <- detect_secondary(tss_data_untrimmed,
+                               "PCB109_PCR12_Ecoli_NOTEX_replicate4") %>% 
+  dplyr::filter(group_sec == "has_secondary", TSS_type == "secondary", type == "CDS") %>%
+  dplyr::select(gene, sample, method, UTR5, group_sec) %>%
+  left_join(smrt_tss, by = "gene") %>%
+  dplyr::filter(abs(UTR5.x-UTR5.y) < 5) %>%
+  dplyr::select(gene, UTR5.x)
+
+c_SMRT <- detect_secondary(tss_data_untrimmed,
+                           "PCB109_PCR12_Ecoli_NOTEX_replicate4") %>% 
+  dplyr::filter(TSS_type == "primary", type == "CDS") %>%
+  dplyr::mutate(group = ifelse(group_sec == "single", "single",
+                               ifelse(group_sec == "has_secondary" & gene %in% c_SMRT_sec$gene, "SMRT_first", "rest"))) %>%
+  left_join(c_SMRT_sec, by = "gene") %>%
+  dplyr::mutate(UTR5 = ifelse(group == "SMRT_first", UTR5.x, UTR5)) %>%
+  dplyr::select(-UTR5.x) %>%
+  dplyr::select(gene, sample, method, UTR5, group) %>%
+  left_join(smrt_tss, by = "gene") %>%
+  remove_missing(name = "UTR5.y")
+
 # PLOTS ----
 
 ## reorder levels ====
@@ -237,6 +376,14 @@ summary_tss_ONT$TSS_type <- factor(summary_tss_ONT$TSS_type,
 summary_tss_ONT$method <- factor(summary_tss_ONT$method,
                                    levels = c("untrimmed", "trimmed"))
 
+end5_comp$sample <- factor(end5_comp$sample,
+                                 levels = rev(bc_to_sample$sample[c(1,10,11,8,9,2,4,3,5,6,7)]))
+end5_comp$method <- factor(end5_comp$method,
+                                 levels = c("untrimmed", "trimmed"))
+
+utr5$sample <- factor(utr5$sample,
+                           levels = c("Smrt_CAP", "illumina",rev(bc_to_sample$sample[c(1,10,11,8,9,2,4,3,5,6,7)])))
+
 ## plotting ==== 
 
 ### Number of 5´ends in category - Supplementary Fig. 14A #### 
@@ -246,193 +393,44 @@ raw_reads_plotting(summary_tss_ONT, n, sample, TSS_type, cbf1_high) +
   facet_grid(cols = vars(method)) +
   xlab("Number of 5´ends in category") 
 
+### Proportion of ONT 5´ends with 0 distance to diff RNA-seq 5´ends - Supplementary Fig. 14B #### 
+raw_reads_plotting(end5_comp, distance_p, sample, mode, cbf1[c(2,5,3)]) +
+  geom_bar(aes(group = method, alpha = method),
+           stat = "identity", color = "black", 
+           position = position_dodge2(width = 2)) +
+  xlab("Proportion of ONT 5´ends with 0 distance to diff RNA-seq 5´ends (%)") +
+  scale_x_continuous(limits = c(0,50), expand = c(0,0))
 
+### 5´end histograms accuracy (including n) - Fig. 3B #### 
+plot_5end_distance(trimtype = "untrimmed", compset = "diff", output = "plot")  
+plot_5end_distance(trimtype = "untrimmed", compset = "diff", output = "stats")  
+plot_5end_distance(trimtype = "untrimmed", compset = "SMRT", output = "plot")  
+plot_5end_distance(trimtype = "untrimmed", compset = "SMRT", output = "stats")  
 
-## STATS =======================================================
-### > WHAT´s the number/percentage of sites found at the 0 site
-tss_total_comparison_ONT <- rbind(tss_data_pychopper_auto_cutadapt_SSP_clipped,
-                                  tss_data_notrimming) %>%
-  dplyr::filter(TSS_type %in% c("primary", "secondary")) %>%
-  group_by(method, id_name, dataset) %>%
-  dplyr::mutate(total_n = n(),
-                group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
-  ungroup() %>%
-  dplyr::filter(TSS_type == "primary", type == "CDS") %>%
-  dplyr::select(gene, dataset, method, UTR5) %>%
-  dplyr::filter(dataset %in% bc_to_sample$sample[c(1,5:12,15:16)])
+### Correlation 5´end detection reproducibility 1 - Supplementary Fig. 15A #### 
+point_cor_ends(tss_total_comparison, PCB109_PCR12_Ecoli_NOTEX_replicate4, DCS109_Ecoli_NOTEX_replicate2, density) 
 
-stats_tss_distance <- tss_total_comparison_ONT %>%
-  left_join(tex_tss, by = "gene") %>%
-  mutate(distance = UTR5.x - UTR5.y) %>%
-  remove_missing(vars = "distance") %>%
-  mutate(mode = substr(dataset, 8,10)) %>%
-  group_by(dataset, method) %>%
-  mutate(distance_p = ifelse(mode != "RNA", sum(distance == 0)/n()*100, sum(distance == -12)/n()*100)) %>%
-  distinct(dataset,method, distance_p, mode) 
+### Correlation 5´end detection reproducibility 2 - Supplementary Fig. 15B #### 
+point_cor_ends(tss_total_comparison, PCB109_PCR12_Ecoli_NOTEX_replicate4, RNA001_Ecoli_TEX_replicate1, density) 
 
-ggplot(data = stats_tss_distance, aes(x = distance_p, y = dataset, fill = mode, factor = method)) +
-  geom_bar(stat = "identity", color = "black", position = position_dodge2(width = 2), alpha = 1) +
-  facet_grid(cols = vars(method)) +
-  theme_Publication_white() +
-  scale_fill_manual(values = cbf1[c(2,5,3)]) 
+### Correlation matrix - Supplementary Fig. 15C #### 
+#### Part 1 ####
+corr_matrix_plot(res_gg, Var2, Var1, value) +
+  geom_tile(color = "black", size = 0.3, aes(width = value, height = value)) +
+  geom_text(aes(label=round(value, digits = 2)), color = "white", size = 4) 
 
+#### Part 2 ####  
+corr_matrix_plot(res_counts_gg, Var2, Var1, value) +
+  geom_point(shape = 21, color = "black") +
+  scale_fill_gradientn(colours = brewer.pal(name = "Blues", n = 9),
+                       limit = c(0,600), space = "Lab", 
+                       name="Pearson\nCorrelation")
 
+### Correlation 5´end detection ONT vs SMRT - Supplementary Fig. 16A #### 
+point_cor_ends(tss_total_comparison, PCB109_PCR12_Ecoli_NOTEX_replicate4, Smrt_CAP, density) 
 
-## REPLICATE comparison ====================================================================
-tss_total_comparison <- rbind(tss_data_pychopper_auto_cutadapt_SSP_clipped,
-                              tss_data_notrimming) %>%
-  dplyr::filter(cov >= 5) %>%
-  group_by(method, id_name, dataset) %>%
-  dplyr::mutate(total_n = n(),
-                group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
-  ungroup() %>%
-  dplyr::filter(TSS_type == "primary", type == "CDS", method == "raw") %>%
-  dplyr::select(gene, dataset, method, UTR5) %>%
-  rbind(tex_tss %>% mutate(dataset = "illumina", 
-                           method = "illumina") %>%
-          dplyr::select(gene, dataset, method, UTR5)) %>%
-  rbind(smrt_tss %>% ungroup () %>% mutate(dataset = "Smrt_CAP", 
-                                           method = "Smrt_CAP") %>%
-          dplyr::select(gene, dataset, method, UTR5)) %>%
-  dplyr::filter(UTR5 >= 0 & !is.na(UTR5) & is.finite(UTR5), UTR5 <= 300) %>%
-  mutate(method2 = paste0(dataset, "_", method))
-
-
-## STATS =======================================================
-### > WHAT´s the number/percentage of sites found at the 0 site
-tss_total_comparison_ONT <- rbind(tss_data_pychopper_auto_cutadapt_SSP_clipped %>% mutate(method = "pychopper_auto_cutadapt_clipped"),
-                                  tss_data_notrimming %>% mutate(method = "notrimming")) %>%
-  group_by(method, id_name, dataset) %>%
-  dplyr::mutate(total_n = n(),
-                group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
-  ungroup() %>%
-  dplyr::filter(TSS_type == "primary", type == "CDS") %>%
-  dplyr::select(gene, dataset, method, UTR5) %>%
-  dplyr::filter(dataset %in% bc_to_sample$sample[c(1,5:12,15:16)])
-
-stats_tss_distance <- tss_total_comparison_ONT %>%
-  dplyr::filter(method == "raw") %>%
-  left_join(tex_tss, by = "gene") %>%
-  mutate(distance = UTR5.x - UTR5.y) %>%
-  remove_missing(vars = "distance") %>%
-  mutate(mode = substr(dataset, 8,10)) 
-
-# DISTANCE BETWEEN FOUND SITES -------------------------------------------------------
-stats_tss_distance$dataset <- factor(stats_tss_distance$dataset,
-                                     levels = (bc_to_sample$sample[c(1,15,16,11,12,5,7,6,8:10)]))
-stats_tss_distance$method <- factor(stats_tss_distance$method,
-                                    levels = (c("raw", "clipped")))
-
-stats_tss_distance %>%
-  dplyr::filter(distance > -17 & distance < +17) %>%
-  group_by(dataset) %>%
-  distinct(gene) %>%
-  summarise(n = n())
-
-## plot distance histogram =====================================
-pdf(here("figures/R_plots/210415_UTR5_distances_ONT_SMRT.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = stats_tss_distance, aes(x = distance, fill = mode)) +
-  facet_grid(cols = vars(method), rows = vars(dataset)) +
-  geom_histogram(binwidth = 1, aes(y=..density..), color = "black") +
-  scale_x_continuous(limits = c(-17,17), expand = c(0,0)) +
-  scale_y_continuous(expand = c(0,0), limits = c(0,0.75)) +
-  scale_fill_manual(values = cbf1[c(2,5,3)]) +
-  theme_Publication_white()+
-  theme(panel.grid.major.y = element_blank()) +
-  geom_vline(xintercept = -12, linetype = "dashed")
-dev.off()
-
-## calc fractions =====================================
-stats_tss_distance_only <- tss_total_comparison_ONT %>%
-  left_join(tex_tss, by = "gene") %>%
-  mutate(distance = UTR5.x - UTR5.y) %>%
-  remove_missing(vars = "distance") %>%
-  mutate(mode = substr(dataset, 8,10)) %>%
-  group_by(dataset, method) %>%
-  mutate(distance_p = ifelse(mode != "RNA", sum(distance == 0)/n()*100, sum(distance == -12)/n()*100)) %>%
-  distinct(dataset,method, distance_p, mode) 
-
-stats_tss_distance_only$dataset <- factor(stats_tss_distance_only$dataset,
-                                          levels = rev(bc_to_sample$sample[c(1,15,16,11,12,5,7,6,8:10)]))
-
-stats_tss_distance_only$method <- factor(stats_tss_distance_only$method,
-                                         levels = c("raw", "clipped"))
-
-
-pdf(here("figures/R_plots/210415_UTR5_raw_clipped_ONT_TEX.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = stats_tss_distance_only, aes(x = distance_p, y = dataset, fill = mode, factor = method)) +
-  geom_bar(stat = "identity", color = "black", position = position_dodge2(width = 2), alpha = 1) +
-  #facet_grid(cols = vars(method)) +
-  theme_Publication_white() +
-  scale_x_continuous(limits = c(0,50), expand = c(0,0)) +
-  scale_fill_manual(values = cbf1[c(2,5,3)]) 
-dev.off()
-
-tss_frame_wide <- tss_total_comparison %>%
-  dplyr::select(-method, -dataset) %>%
-  pivot_wider(names_from = method2, values_from = UTR5, values_fn = {max}) %>%
-  left_join(ecoli_gff) %>%
-  dplyr::filter(!is.na(gene)) 
-
-# >  reorder
-tss_total_comparison$dataset <- factor(tss_total_comparison$dataset,
-                                       levels = (bc_to_sample$sample[c(1,15,16,11,12,5,7,6,8:10)]))
-
-## REPLICATE COMPARISON =================================================================
-levels(as.factor(tss_total_comparison$dataset))
-### PCR-cDNA vs SMRT-CAP
-# > detect secondary start sites that are primary in SMRT CAP
-tss_total_comparison_SMRT_sec <- tss_data_notrimming %>%
-  dplyr::filter(dataset %in% "201210_PCB109_Ecoli_NOTEX_replicate1", 
-                method == "raw", 
-                TSS_type %in% c("primary", "secondary")) %>%
-  dplyr::filter(cov >= 5) %>%
-  group_by(id_name) %>%
-  dplyr::mutate(total_n = n(),
-                group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
-  ungroup() %>%
-  dplyr::filter(group_sec == "has_secondary", TSS_type == "secondary", type == "CDS") %>%
-  dplyr::select(gene, dataset, method, UTR5, group_sec) %>%
-  left_join(smrt_tss, by = "gene") %>%
-  dplyr::filter(abs(UTR5.x-UTR5.y) < 5) %>%
-  dplyr::select(gene, UTR5.x)
-
-# > label those
-tss_total_comparison_SMRT <- tss_data_notrimming %>%
-  dplyr::filter(dataset %in% "201210_PCB109_Ecoli_NOTEX_replicate1", 
-                method == "raw", 
-                TSS_type %in% c("primary", "secondary")) %>%
-  dplyr::filter(cov >= 5) %>%
-  group_by(id_name) %>%
-  dplyr::mutate(total_n = n(),
-                group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
-  ungroup() %>%
-  dplyr::filter(TSS_type == "primary", type == "CDS") %>%
-  dplyr::mutate(group = ifelse(group_sec == "single", "single",
-                               ifelse(group_sec == "has_secondary" & gene %in% tss_total_comparison_SMRT_sec$gene, "SMRT_first", "rest"))) %>%
-  left_join(tss_total_comparison_SMRT_sec, by = "gene") %>%
-  dplyr::mutate(UTR5 = ifelse(group == "SMRT_first", UTR5.x, UTR5)) %>%
-  dplyr::select(-UTR5.x) %>%
-  dplyr::select(gene, dataset, method, UTR5, group) %>%
-  left_join(smrt_tss, by = "gene") %>%
-  remove_missing(name = "UTR5.y")
-
-tss_total_comparison_SMRT %>%
-  group_by(group) %>%
-  summarise(n = n())
-
-# > how many pairwise comparisons
-nrow(tss_total_comparison_SMRT)
-
-# > calc_density
-tss_total_comparison_SMRT$density <- get_density(tss_total_comparison_SMRT$PCR_cDNA,tss_total_comparison_SMRT$SMRT)
-
-# > plot PCR-cDNA vs SMRT
-pdf(here("figures/R_plots/210415_TSS_PCR-cDNA_SMRT.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = tss_total_comparison_SMRT, 
+### Correlation 5´end detection ONT vs SMRT secondary sites - Supplementary Fig. 16B #### 
+ggplot(data = c_SMRT, 
        aes(x = UTR5.x, 
            y = UTR5.y,
            fill = group)) +
@@ -443,221 +441,18 @@ ggplot(data = tss_total_comparison_SMRT,
   stat_cor(method = "pearson", label.x = 1) +
   scale_fill_manual(values = cbf1_high[c(3,2,4)]) +
   coord_equal() 
-dev.off()  
 
-
-### cDNA vs SMRT
-# > make frame
-tss_total_comparison_SMRT1 <- tss_total_comparison %>%
-  dplyr::filter(method %in% c("raw", "Smrt_CAP")) %>%
-  dplyr::select(dataset,UTR5, gene) %>%
-  dplyr::filter(dataset %in% c("201210_PCB109_Ecoli_NOTEX_replicate1", "Smrt_CAP")) %>%
-  pivot_wider(names_from = dataset, values_from = UTR5, values_fn = {max}) %>%
-  dplyr::rename(PCR_cDNA = 2, SMRT = 3) %>%
-  remove_missing() 
-
-# > how many pairwise comparisons
-nrow(tss_total_comparison_SMRT1)
-
-# > calc_density
-tss_total_comparison_SMRT1$density <- get_density(tss_total_comparison_SMRT1$PCR_cDNA,tss_total_comparison_SMRT1$SMRT)
-
-pdf(here("figures/R_plots/210415_TSS_PCR-cDNA_SMRT2.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = tss_total_comparison_SMRT1, 
-       aes(x = PCR_cDNA, 
-           y = SMRT,
-           fill = density)) +
-  geom_abline(linetype = "dashed", slope = 1) +
-  geom_point(alpha = 0.8, size = 5, shape = 21, color = "black") +
-  scale_fill_gradientn(colours = brewer.pal(name = "Blues", n = 9)) +
-  theme_Publication_white() +
-  stat_cor(method = "pearson", label.x = 1) +
-  coord_equal() 
-dev.off()  
-
-### cDNA vs PCR-cDNA
-# > make frame
-tss_total_comparison_cDNA <- tss_total_comparison %>%
-  dplyr::filter(method == "raw") %>%
-  dplyr::select(dataset,UTR5, gene) %>%
-  dplyr::filter(dataset %in% c("201210_PCB109_Ecoli_NOTEX_replicate1", "210317_DCS109_Ecoli_NOTEX_replicate2")) %>%
-  pivot_wider(names_from = dataset, values_from = UTR5, values_fn = {max}) %>%
-  dplyr::rename(PCR_cDNA = 2, cDNA = 3) %>%
-  remove_missing() 
-
-# > how many pairwise comparisons
-nrow(tss_total_comparison_cDNA)
-
-# > calc_density
-tss_total_comparison_cDNA$density <- get_density(tss_total_comparison_cDNA$PCR_cDNA,tss_total_comparison_cDNA$cDNA)
-
-# > plot PCR-cDNA vs cDNA
-pdf(here("figures/R_plots/210415_TSS_PCR-cDNA_cDNA.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = tss_total_comparison_cDNA, 
-       aes(x = PCR_cDNA, 
-           y = cDNA,
-           fill = density)) +
-  geom_abline(linetype = "dashed", slope = 1) +
-  geom_point(alpha = 0.8, size = 5, shape = 21, color = "black") +
-  scale_fill_gradientn(colours = brewer.pal(name = "Blues", n = 9)) +
-  theme_Publication_white() +
-  stat_cor(method = "pearson", label.x = 1) +
-  coord_equal() 
-dev.off()  
-
-# > plot PCR-cDNA vs cDNA
-pdf(here("figures/R_plots/210415_TSS_PCR-cDNA_cDNA.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = tss_total_comparison_cDNA, 
-       aes(x = PCR_cDNA, 
-           y = cDNA,
-           fill = density)) +
-  geom_abline(linetype = "dashed", slope = 1) +
-  geom_point(alpha = 0.8, size = 5, shape = 21, color = "black") +
-  scale_fill_gradientn(colours = brewer.pal(name = "Blues", n = 9)) +
-  theme_Publication_white() +
-  stat_cor(method = "pearson", label.x = 1) +
-  coord_equal() 
-dev.off()  
-
-### RNA vs cDNA
-# > make frame
-tss_total_comparison_RNA <- tss_total_comparison %>%
-  group_by(dataset,gene) %>%
-  #dplyr::slice(which.min(UTR5)) %>%
-  dplyr::select(dataset,UTR5, gene) %>%
-  dplyr::filter(dataset %in% c("190123_RNA001_Ecoli_TEX_replicate1", "201210_PCB109_Ecoli_NOTEX_replicate1")) %>%
-  pivot_wider(names_from = dataset, values_from = UTR5, values_fn = {max}) %>%
-  dplyr::rename(RNA = 2, PCR_cDNA = 3) %>%
-  remove_missing() 
-
-# > how many pairwise comparisons
-nrow(tss_total_comparison_RNA)
-
-# > calc_density
-tss_total_comparison_RNA$density <- get_density(tss_total_comparison_RNA$RNA,tss_total_comparison_RNA$PCR_cDNA)
-
-# > plot PCR-cDNA vs cDNA
-pdf(here("figures/R_plots/210415_TSS_PCR-cDNA_RNA.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = tss_total_comparison_RNA, 
-       aes(x = PCR_cDNA, 
-           y = RNA,
-           fill = density)) +
-  geom_abline(linetype = "dashed", slope = 1) +
-  geom_point(alpha = 0.8, size = 5, shape = 21, color = "black") +
-  scale_fill_gradientn(colours = brewer.pal(name = "Blues", n = 9)) +
-  theme_Publication_white() +
-  stat_cor(method = "pearson", label.x = 1) +
-  coord_equal() 
-dev.off()  
-
-## Correlation matrix: 
-### PEARSON PAIRWISE #################
-colnames(tss_frame_wide)
-res    <- cor(tss_frame_wide[c(2,16,17,12,13,6,8,7,9,10,11)],  method = "pearson", use = "pairwise.complete.obs")
-res_gg <- melt(get_upper_tri(res))
-
-pdf(here("figures/R_plots/210415_TSS_CORR_MAT.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = res_gg, aes(Var2, Var1, fill = value, color = value, size = value)) +
-  geom_tile(color = "grey", size = 0.3, fill = "white") +
-  geom_tile(color = "black", size = 0.3, aes(width = value, height = value)) +
-  theme_void() +
-  scale_fill_gradientn(colours = brewer.pal(name = "YlGnBu", n = 9),
-                       limit = c(0.5,1), space = "Lab", 
-                       name="Pearson\nCorrelation") +
-  geom_text(aes(label=round(value, digits = 2)), color = "white", size = 4) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1)) +
-  coord_fixed() +
-  scale_y_discrete(limits=rev)
-dev.off()
-
-### NUMBERS PAIRWISE ################
-colnames(tss_frame_wide)
-res_counts <- pairwiseCount(tss_frame_wide[c(2,16,17,12,13,6,8,7,9,10,11)], diagonal = F)
-res_counts_gg <- melt(get_lower_tri(res_counts))
-
-pdf(here("figures/R_plots/210415_TSS_CORR_MAT_NUMBERS.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = res_counts_gg, aes(as.factor(Var2), as.factor(Var1), fill = value, color = value, size = value)) +
-  geom_tile(color = "grey", size = 0.3, fill = "white") +
-  geom_point(color = "black", shape = 21) +
-  #geom_tile(color = "black", size = 0.3, aes(width = value/500, height = value/500)) +
-  theme_void() +
-  scale_fill_gradientn(colours = brewer.pal(name = "Blues", n = 9),
-                       space = "Lab", 
-                       name="Overlap\nCorrelation") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                   size = 12, hjust = 1)) +
-  coord_fixed() +
-  scale_y_discrete(limits=rev)
-dev.off()
-
-
-
-# plotting .............................................................
-## logos ========================================================
-tss_total_comparison_ONT <- rbind(tss_data_pychopper_auto_cutadapt_SSP_clipped %>% mutate(method = "pychopper_auto_cutadapt_clipped"),
-                                  tss_data_notrimming %>% mutate(method = "notrimming")) %>%
-  group_by(method, id_name, dataset) %>%
-  dplyr::mutate(total_n = n(),
-                group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
-  ungroup() %>%
-  dplyr::filter(TSS_type == "primary", type == "CDS") %>%
-  #dplyr::select(gene, dataset, method, UTR5) %>%
-  dplyr::filter(dataset %in% bc_to_sample$sample[c(1,5:12,15:16)]) %>%
-  mutate(mode = substr(dataset, 8,10)) %>%
-  mutate(UTR5 = ifelse(mode == "RNA", UTR5+12, UTR5)) %>%
-  dplyr::select(mode, dataset, UTR5) %>%
-  rbind(tex_tss %>% 
-          dplyr::mutate(mode = "ILL", dataset = "ILL") %>%
-          dplyr::select(mode, dataset, UTR5)) %>%
-  rbind(smrt_tss %>% 
-          dplyr::mutate(mode = "SMRT-Cap", dataset = "SMRT-Cap") %>%
-          dplyr::select(mode, dataset, UTR5))
-
-### reorder #############
-tss_total_comparison_ONT$dataset <- factor(tss_total_comparison_ONT$dataset,
-                                           levels = c("SMRT-Cap","ILL", rev((bc_to_sample$sample[c(1,15,16,11,12,5,7,6,8:10)]))))
-
-
-## 5´UTR ========================================================
-pdf(here("figures/R_plots/210416_UTR5_all.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
-ggplot(data = tss_total_comparison_ONT, aes(y = dataset, fill = mode)) +
+### 5´UTR length distribution - Supplementary Fig. 17A #### 
+ggplot(data = utr5, aes(y = sample, fill = mode)) +
   geom_density_ridges(stat = "binline",binwidth = 4,
                       aes(x = UTR5, height =..ndensity..), 
                       scale = 0.9, alpha = 1) +
   theme_Publication_white() +
-  #scale_x_continuous(limits = c(0,300), expand = c(0,0)) +
   scale_fill_manual(values = cbf1[c(2,1,5,3,4)])
-dev.off()
 
-## SEQUENCE LOGO ===============================================
-acgt_color_scale = make_col_scheme(chars=c('A', 'T', 'C', 'G'), 
-                                   cols=c("#8591B3","#6CB8D4","#A1CEC2","#AD9D86"))
-
-# TSS-40 :TSS+10
-TSS=50
-start=10
-end=60
-
-seqs <- tss_data_notrimming %>%
-  dplyr::filter(dataset %in% "201210_PCB109_Ecoli_NOTEX_replicate1", TSS_type %in% "primary", type == "CDS", cov >= 3) %>%
-  distinct(gene, .keep_all = T) %>%
-  rowwise() %>%
-  dplyr::mutate(tss_sequence2 = ifelse(strand == "+", as.character(ecoli_fasta$`NC_000913.3 Escherichia coli str. K-12 substr. MG1655, complete genome`[(TSS-40):(TSS)]),
-                                       as.character(reverseComplement(ecoli_fasta$`NC_000913.3 Escherichia coli str. K-12 substr. MG1655, complete genome`[(TSS):(TSS+40)])))) %>%
-  dplyr::select(tss_sequence2) 
-
-pdf(here("figures/R_plots/210416_geom_logo_TSS.pdf"), 
-    width = 7, height = 7, paper = "special", onefile=FALSE)
+### Promoter logo - Supplementary Fig. 17B #### 
 ggplot() + 
-  geom_logo(seqs, font = "helvetica_bold", col_scheme = acgt_color_scale, seq_type = "dna") + 
+  geom_logo(utr5_logo, font = "helvetica_bold", col_scheme = acgt_color_scale, seq_type = "dna") + 
   theme_logo() +
   theme_Publication_white() +
   theme(panel.grid.major = element_line(colour = NA),
@@ -665,100 +460,3 @@ ggplot() +
         axis.text.x = element_text(size = 0)) +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(limits = c(0,0.4), expand = c(0,0))
-dev.off()
-
-
-
-
-## more important to see effect of sequencing depth on TSS detection ==========================================
-tss_data_pychopper_auto_cutadapt_clipped %>%
-  dplyr::filter(TSS_type %in% c("primary"),type == "CDS",
-                dataset == "201210_PCB109_Ecoli_NOTEX_replicate1") %>%
-  mutate(map_method = "clipped")
-
-
-g <- tss_data_pychopper_auto_cutadapt_clipped %>% 
-  dplyr::filter(TSS_type %in% c("primary","secondary")) %>%
-  group_by(dataset, id_name) %>%
-  dplyr::mutate(total_n = n(),
-                group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
-  #dplyr::mutate(UTR5_new = ifelse(group_sec == "single" & TSS_type == "primary", UTR5, 
-  #                                ifelse(group_sec != "single", UTR5[TSS_type == "secondary"], NA))) %>%
-  ungroup() %>%
-  dplyr::filter(TSS_type == "primary") %>%
-  rowwise() %>%
-  mutate(polyG_detected = str_count(string = substring(tss_sequence,31,41),pattern = "GGG+") >= 1) %>%
-  dplyr::filter(polyG_detected == F) %>%
-  dplyr::select(UTR5, dataset, gene) %>%
-  pivot_wider(names_from = dataset, values_from = UTR5, values_fn = {sum}) %>%
-  left_join(subset(tss_data_pychopper_auto_cutadapt_clipped, dataset %in% "201208_PCB109_Ecoli_NOTEX_replicate1") %>%
-              group_by(id_name) %>%
-              dplyr::mutate(total_n = n(),
-                            group_sec = ifelse(total_n >1, "has_secondary", "single")), by = "gene") %>%
-  distinct(gene, .keep_all = T)
-g
-colnames(g)
-ggplot(data = g, aes(x = `201208_PCB109_Ecoli_NOTEX_replicate1` - `201208_PCB109_Ecoli_NOTEX_replicate2`, fill = cov > 10)) +
-  geom_histogram() +
-  scale_x_continuous(limits = c(-30,30))
-
-cg <- g %>% dplyr::filter(!is.na(`201208_PCB109_Ecoli_NOTEX_replicate1`),
-                          !is.na(`201208_PCB109_Ecoli_NOTEX_replicate2`)) %>%
-  dplyr::filter(cov > 3) %>%
-  group_by(group_sec) %>%
-  summarise(n = n())
-cg
-sum()
-pdf(here("figures/R_plots/210217_UTR5_cDNA-PCR_replicates.pdf"), 
-    width = 3.2, height = 3.2, paper = "special", onefile=FALSE)
-ggplot(data = cg, aes(x = `201208_PCB109_Ecoli_NOTEX_replicate1`, 
-                      y  = `201208_PCB109_Ecoli_NOTEX_replicate2`, fill =group_sec)) +
-  geom_point(size = 3, alpha = 0.7, shape = 21) +
-  geom_abline(linetype = "dashed") +
-  scale_x_continuous(limits = c(0,300)) +
-  scale_y_continuous(limits = c(0,300)) +
-  stat_cor(method = "pearson", label.x = 1) +
-  xlab("peakcaller") +
-  ylab("compare set") +
-  theme_Publication_white() +
-  scale_fill_manual(values = ibm_colors[c(4,1)]) +
-  coord_equal()
-dev.off()
-
-# DISTANCE TO ILLUMINA DATA ---------------------------------
-tss_total_to_illumina <- rbind(tss_data_pychopper_auto_cutadapt_clipped %>% mutate(method = "pychopper_auto_cutadapt_clipped"),
-                               tss_data_pychopper_auto_cutadapt_SSP_clipped %>% mutate(method = "pychopper_auto_cutadapt_SSP_clipped"),
-                               tss_data_pychopper_auto %>% mutate(method = "pychopper_auto"),
-                               tss_data_notrimming %>% mutate(method = "notrimming")) %>%
-  group_by(method, id_name, dataset) %>%
-  dplyr::mutate(total_n = n(),
-                group_sec = ifelse(total_n >1, "has_secondary", "single")) %>%
-  ungroup() %>%
-  dplyr::filter(TSS_type == "primary", type == "CDS") %>%
-  mutate(polyG_detected = str_count(string = substring(tss_sequence,31,41),pattern = "GGG+") >= 1) %>%
-  dplyr::select(gene, dataset, method, UTR5) 
-
-tss_total_to_illumina2 <- left_join(tss_total_to_illumina, 
-                                    smrt_tss %>% dplyr::rename(UTR5_Ill = UTR5) %>% dplyr::select(gene,UTR5_Ill), by = "gene")   %>%
-  mutate(distance = UTR5 - UTR5_Ill,
-         mode = substr(dataset, 8,10)) %>%
-  dplyr::filter(!is.na(dataset)) %>%
-  dplyr::filter(dataset %in% bc_to_sample$sample[c(1,5:12,15:16)]) 
-
-levels(as.factor(tss_total_to_illumina2$method))
-tss_total_to_illumina2$dataset <- factor(tss_total_to_illumina2$dataset,
-                                         levels = (bc_to_sample$sample[c(1,15,16,11,12,5,7,6,8:10)]))
-
-ggplot(data = tss_total_to_illumina2, aes(x = distance, fill= mode)) +
-  facet_grid(rows = vars(dataset), cols = vars(method)) +
-  scale_x_continuous(limits = c(-30,30), expand = c(0,0)) +
-  scale_y_continuous(expand = c(0,0), limits = c(0, .65)) +
-  geom_histogram(binwidth = 1, aes(y=..density..), color = "black") +
-  scale_fill_manual(values = cbf1[c(2,5,3)]) +
-  geom_vline(xintercept = -11, linetype = "dashed") +
-  theme_Publication_white() 
-
-
-
-
-

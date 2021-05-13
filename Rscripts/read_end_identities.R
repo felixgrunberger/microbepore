@@ -143,9 +143,3 @@ raw_reads_plotting(polyA_frame, n_A, scaled_value,method, ibm_colors) +
   theme_Publication_white()
 
 
-
-
-  
-
-
-

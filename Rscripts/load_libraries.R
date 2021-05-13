@@ -150,6 +150,20 @@ get_density <- function(x, y, ...) {
   return(dens$z[ii])
 }
 
+corr_matrix_plot <- function(mydf, myx, myy, myfill){
+  
+  ggplot(data = mydf, aes(x = {{myx}}, y = {{myy}}, fill = {{myfill}}, color = {{myfill}},size = {{myfill}})) +
+    geom_tile(color = "grey", size = 0.3, fill = "white") +
+    theme_void() +
+    scale_fill_gradientn(colours = brewer.pal(name = "YlGnBu", n = 9),
+                         limit = c(0.5,1), space = "Lab", 
+                         name="Pearson\nCorrelation") +
+    theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                     size = 10, hjust = 1)) +
+    coord_fixed() +
+    scale_y_discrete(limits=rev)
+}
+
 ## color palettes ====
 
 ### standard ####
@@ -163,3 +177,12 @@ acgt_colors <- c("#8591B3", "#A1CEC2", "#AD9D86","white", "#6CB8D4")
 
 ### ibm-like colors ####
 ibm_colors <- c("#E69F00","#000000", "#B3B3B3","#648FFF")
+
+### sequence logos ####
+acgt_color_scale = make_col_scheme(chars=c('A', 'T', 'C', 'G'), 
+                                   cols=c("#8591B3","#6CB8D4","#A1CEC2","#AD9D86"))
+
+## genome e. coli ====
+ecoli_gff   <- read_in_gff(paste0(dir, "/data/genome_data/NC_000913.3.gff3"))
+ecoli_fasta <- readDNAStringSet(paste0(dir, "/data/genome_data/NC_000913.3.fasta"))
+names(ecoli_fasta) <- "chr"
