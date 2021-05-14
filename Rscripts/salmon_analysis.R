@@ -42,19 +42,7 @@ point_cor <-  function(mydf, myx, myy, myfill, mysize){
     coord_equal() 
 }
 
-corr_matrix_plot <- function(mydf, myx, myy, myfill){
-  
-  ggplot(data = mydf, aes(x = {{myx}}, y = {{myy}}, fill = {{myfill}}, color = {{myfill}},size = {{myfill}})) +
-    geom_tile(color = "grey", size = 0.3, fill = "white") +
-    theme_void() +
-    scale_fill_gradientn(colours = brewer.pal(name = "YlGnBu", n = 9),
-                         limit = c(0.5,1), space = "Lab", 
-                         name="Pearson\nCorrelation") +
-    theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-                                     size = 10, hjust = 1)) +
-    coord_fixed() +
-    scale_y_discrete(limits=rev)
-}
+
 
 # load & tidy data ----
 dir <- here()

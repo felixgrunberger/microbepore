@@ -69,8 +69,8 @@ annotate_tss_peaks <- function(merged_peaks, input_TTS, input_genome_gff = ecoli
     dplyr::rename(start = start_2,end = end_2) %>%
     left_join(input_genome_gff, by = c("start" = "start_feature", "end" = "end_feature")) %>%
     rowwise() %>%
-    dplyr::mutate(tss_sequence = ifelse(strand == "+", as.character(input_genome_fasta$`NC_000913.3 Escherichia coli str. K-12 substr. MG1655, complete genome`[(TSS - 40):(TSS + 10 )]),
-                                        as.character(reverseComplement(input_genome_fasta$`NC_000913.3 Escherichia coli str. K-12 substr. MG1655, complete genome`[(TSS - 10):(TSS + 40 )]))),
+    dplyr::mutate(tss_sequence = ifelse(strand == "+", as.character(input_genome_fasta$chr[(TSS - 40):(TSS + 10 )]),
+                                        as.character(reverseComplement(input_genome_fasta$chr[(TSS - 10):(TSS + 40 )]))),
                   UTR5 = ifelse(strand == "+", start - TSS, TSS - end)) %>%
     left_join(input_TTS %>% 
                 ungroup() %>% 
@@ -223,10 +223,7 @@ tss_data_trimmed <- tss_peaks_pipe("tss_data_pychopper_auto_cutadapt_SSP_clipped
                                    files[which(1:length(files) %% 2 == 0)],
                                    files[which(1:length(files) %% 2 == 1)])
 
-
-fwrite(tss_data_trimmed, 
-       paste0(dir, "/data/tss_data/tss_data_pychopper_auto_cutadapt_SSP_clipped.tsv"), col.names = T, sep = "\t")
-
+fwrite(tss_data_trimmed, paste0(dir, "/tables/tss_tables/tss_data_trimmed.tsv"), col.names = T, sep = "\t")
 
 ### read in untrimmed - raw mapped data ####
 files <- list.files(paste0(dir,"/data/tss_data/tss_data_notrimming/"), recursive = T, pattern = ".narrowPeak.counts")
@@ -236,7 +233,7 @@ tss_data_untrimmed <- tss_peaks_pipe("tss_data_notrimming",
                                      files[which(1:length(files) %% 2 == 0)],
                                      files[which(1:length(files) %% 2 == 1)])
 
-fwrite(tss_data_untrimmed, paste0(dir, "/data/tss_data/tss_data_notrimming.tsv"), col.names = T, sep = "\t")
+fwrite(tss_data_untrimmed, paste0(dir, "/tables/tss_tables/tss_data_untrimmed.tsv"), col.names = T, sep = "\t")
 
 ## TSS from other studies ====
 ### TEX-TSS-results ####
