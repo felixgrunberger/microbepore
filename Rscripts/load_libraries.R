@@ -172,6 +172,9 @@ cbf1 <- c("#EFEAFF","#F5AAA3","#CFCFCF", "#F6B2FB", "#ABC2DA")
 ### highlight ####
 cbf1_high <- c("#EFEAFF", "#ABC2DA","#F6B2FB","#648FFF")
 
+### highlight 6 colors ####
+cbf1_high2 <- c("#F6B2FB","#648FFF", "grey40", "#ABC2DA","#F5AAA3", "black")
+
 ### base identity colors ####
 acgt_colors <- c("#8591B3", "#A1CEC2", "#AD9D86","white", "#6CB8D4")
 
@@ -186,3 +189,8 @@ acgt_color_scale = make_col_scheme(chars=c('A', 'T', 'C', 'G'),
 ecoli_gff   <- read_in_gff(paste0(dir, "/data/genome_data/NC_000913.3.gff3"))
 ecoli_fasta <- readDNAStringSet(paste0(dir, "/data/genome_data/NC_000913.3.fasta"))
 names(ecoli_fasta) <- "chr"
+
+ecoli_gff_cds <- ecoli_gff %>%
+  dplyr::filter(type %in% c("ncRNA","CDS")) %>%
+  arrange(desc(start_feature)) %>%
+  rownames_to_column(var = "gff_id")

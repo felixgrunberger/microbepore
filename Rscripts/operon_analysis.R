@@ -5,6 +5,10 @@ library(here)
 source(here("Rscripts/load_libraries.R"))
 
 # functions & defs ----
+p <- function(v) {
+  Reduce(f=paste, x = v)
+}
+
 perform_analysis <- function(dataset_choice, 
                              tss_input = paste0(dir,"/data/tss_data/tss_data_notrimming.tsv"), 
                              tts_input = paste0(dir,"/data/tts_data/tts_data_pychopper_auto_cutadapt_SSP_clipped.tsv"), 
@@ -143,11 +147,11 @@ find_reads_in_operons <- function(dataset_choice, gff_table = ecoli_gff_cds){
 }
 
 write_operon <- function(inputDF){
-  inputDF %>%
+  s <- inputDF %>%
     ungroup() %>%
     dplyr::rename(gene = genes_in_operon) %>%
-    dplyr::select(seqnames,genes_in_operon_all, size_operon, operon_seen, covered_by, perc_seen, gene) %>%
-    write.table(x = ., file = paste0(dir, "/tables/operon_tables/", sample, ".operons.tsv"), 
+    dplyr::select(seqnames,genes_in_operon_all, size_operon, operon_seen, covered_by, perc_seen, gene, start, end, sample, operon_name) 
+    write.table(x = s, file = paste0(dir, "/tables/operon_tables/", s$sample[1], ".operons.tsv"), 
                 sep = "\t", quote = F,col.names = T, row.names = F)
 }
 
@@ -186,13 +190,25 @@ modify_TU_output <- function(input_set){
     arrange(desc(size_operon))
 }
 
+get_intersect <- function(inputdf, dataset){
+  inputdf %>%
+    as_tibble() %>%
+    mutate(size_operon = str_count(operon, "\\|") + 1) %>%
+    group_by(size_operon) %>%
+    summarise(how_many = n()) %>%
+    mutate(intersection = dataset) %>%
+    ungroup()
+}
+
+
 # load & tidy data ----
 
 ## calc transcriptional units for example data sets ====
 sets <- c("RNA001_Ecoli_TEX_replicate1",
-          "PCB109_PCR12_Ecoli_TEX_replicate4",
+          "PCB109_PCR12_Ecoli_NOTEX_replicate4",
           "DCS109_Ecoli_NOTEX_replicate2")
 
+dir <- "/Volumes/EX_SSD/"
 RNA_operon <- find_reads_in_operons(dataset_choice = sets[1]) %>% 
   mutate(sample = sets[1])
 PCB_operon <- find_reads_in_operons(dataset_choice = sets[2]) %>% 
@@ -201,11 +217,12 @@ DCS_operon <- find_reads_in_operons(dataset_choice = sets[3]) %>%
   mutate(sample = sets[3])
 
 ## write to output tables ====
+dir <- here()
 write_operon(RNA_operon)
 write_operon(PCB_operon)
 write_operon(DCS_operon)
 
-## for Upset comparison ====
+## for Upset comparison ONT ====
 
 ### prepare data ####
 pcb_tu <- modify_TU_output(PCB_operon)
@@ -227,6 +244,90 @@ upset_table <- c(`DCS` = length(dcs_tu$operon) - length(inter_DCS_RNA) + length(
                  `DCS&RNA` = length(inter_DCS_RNA) - length(inter_all),
                  `ONT&RNA` = length(inter_RNA_PCB) - length(inter_all),
                  `DCS&PCB&RNA` = length(inter_all))
+
+## for Upset comparison ALL ====
+
+### load other data ####
+dir <- "/Volumes/EX_SSD/"
+#### regulon db ####
+OperonSet <- vroom(paste0(dir ,"data/comparison_data/Operon/OperonSet.txt"), comment = "#", col_names = F) %>%
+  separate_rows(X6, sep = ",") %>%
+  left_join(ecoli_gff, by = c("X6" = "short_gene")) %>%
+  dplyr::filter(!is.na(seqid)) %>% 
+  dplyr::rename(operon_name = 1, strand = 4, evidence = 8) %>%
+  dplyr::select(operon_name, strand, evidence, gene) %>%
+  group_by(operon_name) %>% 
+  arrange(gene) %>%
+  mutate(operon = str_replace_all(p(gene), " ", "|")) %>%
+  mutate(operon = gsub('*^\\|', '', operon)) %>%
+  mutate(operon = gsub('*^\\|', '', operon)) %>%
+  mutate(operon = gsub('*^\\|', '', operon)) %>%
+  dplyr::select(operon, evidence) %>%
+  arrange(operon) %>%
+  distinct(operon, .keep_all = T) 
+
+#### SMRT CAP operons ####
+smrt_operons <- read_xlsx(paste0(dir ,"data/comparison_data/Operon/smrt_cap-41467_2018_5997_MOESM5_ESM.xlsx"), skip = 1) %>% 
+  dplyr::rename(operon = 1) %>%
+  select(operon, type) %>%
+  distinct(operon, .keep_all = T) %>%
+  mutate(operon = str_split(operon, '\\|'), 
+         operon = map_chr(operon, ~toString(sort(.x))),
+         operon = str_replace_all(operon, ",|;", "|"),
+         operon = str_replace_all(operon, " ", ""))
+
+### calc intersection ####
+inter_DB_NANO    <- intersect(OperonSet$operon, pcb_tu$operon)
+inter_DB_SMRT    <- intersect(OperonSet$operon, smrt_operons$operon)
+inter_SMRT_NANO  <- intersect(smrt_operons$operon, pcb_tu$operon)
+inter_all        <- intersect(smrt_operons$operon, pcb_tu$operon) %>%
+  intersect(OperonSet$operon)
+
+### Upset table ####
+upset_table_all <- c(`db` = length(smrt_operons$operon) - length(inter_DB_SMRT) + length(inter_all)  - length(inter_DB_NANO),
+                 `ONT`= length(pcb_tu$operon) - length(inter_SMRT_NANO) + length(inter_all)  - length(inter_DB_NANO),
+                 `smrt` = length(smrt_operons$operon) - length(inter_SMRT_NANO) + length(inter_all)  - length(inter_DB_SMRT),
+                 `db&ONT`= length(inter_DB_NANO) - length(inter_all),
+                 `db&smrt` = length(inter_DB_SMRT) - length(inter_all),
+                 `ONT&smrt` = length(inter_SMRT_NANO) - length(inter_all),
+                 `db&ONT&smrt` = length(inter_all))
+
+### Operon size of intersections ####
+inter_all_quant <- rbind(get_intersect(pcb_tu %>%
+                                         dplyr::filter(!operon %in% OperonSet$operon,
+                                                       !operon %in% smrt_operons$operon) %>%
+                                         select(operon),
+                                       "NANO"),
+                         get_intersect(OperonSet %>%
+                                         dplyr::filter(!operon %in% pcb_tu$operon,
+                                                       !operon %in% smrt_operons$operon) %>%
+                                         select(operon),
+                                       "DB"),
+                         get_intersect(smrt_operons %>%
+                                         dplyr::filter(!operon %in% pcb_tu$operon,
+                                                       !operon %in% OperonSet$operon) %>%
+                                         select(operon),
+                                       "SMRT"),
+                         get_intersect(pcb_tu %>%
+                                         dplyr::filter(operon %in% OperonSet$operon,
+                                                       !operon %in% smrt_operons$c) %>%
+                                         select(operon),
+                                       "DB&NANO"),
+                         get_intersect(smrt_operons %>%
+                                         dplyr::filter(operon %in% OperonSet$operon,
+                                                       !operon %in% pcb_tu$operon) %>%
+                                         select(operon),
+                                       "DB&SMRT"),
+                         get_intersect(smrt_operons %>%
+                                         dplyr::filter(!operon %in% OperonSet$operon,
+                                                       operon %in% pcb_tu$operon) %>%
+                                         select(operon),
+                                       "NANO&SMRT"),
+                         get_intersect(smrt_operons %>%
+                                         dplyr::filter(operon %in% OperonSet$operon,
+                                                       operon %in% pcb_tu$operon) %>%
+                                         select(operon),
+                                       "DB&NANO&SMRT"))
 
 
 ## calc transcriptional unit context ====
@@ -264,3 +365,22 @@ ggplot(data = ONT_context_all, aes(y = sample, x = perc, fill = as.factor(n))) +
   xlab("Distribution of transcriptional contexts") +
   theme(panel.grid.major.y = element_blank(),
         panel.grid.major.x = element_line(color = "black", linetype = "dashed")) 
+
+
+### Operon comparison ONT methods/SMRT/DB - Supplementary Fig. 21A #### 
+upset(data = fromExpression(upset_table_all), 
+      sets = c("db", "ONT", "smrt"),
+      keep.order = TRUE, order.by = c("degree"),
+      sets.x.label = "Number of TUs", mainbar.y.label = "Intersections", 
+      line.size = 3, point.size = 11, 
+      sets.bar.color = "gray60",
+      matrix.color = "gray60")
+
+### Operon size per intersection - Supplementary Fig. 21B #### 
+ggplot(data = inter_all_quant_scaled, aes(x = size_operon, y = how_many, color = intersection, fill = intersection)) +
+  geom_line() +
+  geom_point(shape = 21, color = "black", size = 4, alpha = 1) +
+  scale_y_log10() +
+  theme_Publication_white() 
+
+

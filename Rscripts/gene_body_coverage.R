@@ -207,8 +207,6 @@ cov_sets <- rbind(cov_untrimmed %>% mutate(method = "untrimmed"),
 cov_trimmed_sizes   <- modify_coverage_files(folder = paste0(dir, "/data/coverage_data/coverage_data_pychopper_auto_cutadapt_SSP_clipped_stranded/"),
                                              output = "genesizes")
 
-###
-
 # PLOTS ----
 
 ## reorder levels ====
