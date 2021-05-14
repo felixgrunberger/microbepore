@@ -186,7 +186,7 @@ fwrite(w %>% dplyr::filter(strand == "-") %>% dplyr::select(-strand),
        paste0(dir,"/tables/transcript_tables/transcripts.minus.bedgraph"), sep = "\t", col.names = F, quote = F)
 
 ## read in files from bedtools coverage ====
-dir <- "/Volumes/EX_SSD/"
+
 ### full-length > polyA-trimmed > polyA & SSP adapter trimmed > clipping removed > stranded ####
 cov_trimmed   <- modify_coverage_files(folder = paste0(dir, "/data/coverage_data/coverage_data_pychopper_auto_cutadapt_SSP_clipped_stranded/"),
                                        output = "normal")
