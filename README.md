@@ -27,13 +27,16 @@ Regensburg, Germany.
 
 ## About this repository
 
-This is the repository for the manuscript “Exploring prokaryotic
-transcription, operon structures, rRNA maturation and modifications
-using Nanopore-based native RNA sequencing,” which can be found on
-<a href = "https://www.biorxiv.org/content/10.1101/2019.12.18.880849v2">bioRxiv</a>.
-It contains a description of the bioinformatical tools used to process
-native RNA sequencing data and the downstream analysis mostly based on
-custom [Rscripts](Rscripts).
+This is the repository for the manuscript “Expanding the transcriptomic
+toolbox in prokaryotes by Nanopore sequencing of RNA and cDNA
+molecules.” In this study, we applied and benchmarked all currently
+available RNA-seq kits from Oxford Nanopore technologies to analyse RNAs
+in the prokaryotic model organism *Escherichia coli* K-12. These
+include:  
+- Direct sequencing of native RNAs (DRS) using RNA001 & RNA002
+chemistry  
+- Native cDNA sequencing (cDNA) using DCS109 chemistry  
+- PCR-cDNA sequencing (PCR-cDNA) using PCB109 chemistry
 
 The repository is currently actively developed.
 
@@ -44,10 +47,20 @@ Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Develop
 
 <https://felixgrunberger.github.io/microbepore/>
 
+## Preprint
+
+Preprint will soon be available at bioRxiv.  
+In case you are interested, have a look at our previous work:
+“<https://www.biorxiv.org/content/10.1101/2019.12.18.880849v2>”&gt;bioRxiv</a>.
+
 ## What can you find here
 
-Here you can find all of the Rscripts used during the analysis (compare
-)
+A description of the workflow using publicly available tools used to
+basecall, demultiplex, trim, map and count data can be found in the
+[pipeline](pipeline) section. Downstream analysis, including quality
+control, annotation of transcript boundaries, gene body coverage
+analysis, transcriptional unit annotation are based on custom
+[Rscripts](Rscripts).
 
 ## Data generation
 
@@ -71,27 +84,84 @@ the recommended script in MinKNOW.
 
 ## Figures
 
-``` r
-library(here)
-#> here() starts at /Users/felix/Documents/R/GITHUB/microbepore
-library(readxl)
-devtools::install_github("glin/reactable")
-#> Downloading GitHub repo glin/reactable@HEAD
-#> 
-#>      checking for file ‘/private/var/folders/m1/j6m28r317pngj1mw_l3v5zxw0000gn/T/RtmpqzTrr2/remotes1b6f62ccec15/glin-reactable-8197c00/DESCRIPTION’ ...  ✓  checking for file ‘/private/var/folders/m1/j6m28r317pngj1mw_l3v5zxw0000gn/T/RtmpqzTrr2/remotes1b6f62ccec15/glin-reactable-8197c00/DESCRIPTION’
-#>   ─  preparing ‘reactable’:
-#>      checking DESCRIPTION meta-information ...  ✓  checking DESCRIPTION meta-information
-#>   ─  checking for LF line-endings in source and make files and shell scripts
-#>   ─  checking for empty or unneeded directories
-#>   ─  building ‘reactable_0.2.3.9000.tar.gz’
-#>      
-#> 
-library(reactable)
-figure_tables <- read_xlsx(here("tables/Supplementary_Table2.xlsx"))
-reactable(figure_tables)
-```
-
-![](README-unnamed-chunk-2-1.png)<!-- -->
+|               |     |     |                                                           |     |
+|---------------|-----|-----|-----------------------------------------------------------|-----|
+| Main          | 1   | A   | NA                                                        |     |
+| Main          | 1   | B   | NA                                                        |     |
+| Main          | 1   | C   | NA                                                        |     |
+| Main          | 1   | D   | NA                                                        |     |
+| Main          | 2   | A   | [Rscripts/salmon\_analysis.R](Rscripts/salmon_analysis.R) |     |
+| Main          | 2   | B   | \[\]Rscripts/salmon\_analysis.R                           |     |
+| Main          | 2   | C   | Rscripts/salmon\_analysis.R                               |     |
+| Main          | 3   | A   | Rscripts/example\_coverage\_plots.R                       |     |
+| Main          | 3   | B   | Rscripts/end5\_detection.R                                |     |
+| Main          | 3   | C   | Rscripts/end3\_detection.R                                |     |
+| Main          | 4   | A   | Rscripts/gene\_body\_coverage.R                           |     |
+| Main          | 4   | B   | NA                                                        |     |
+| Main          | 4   | C   | Rscripts/gene\_body\_coverage.R                           |     |
+| Main          | 4   | D   | Rscripts/gene\_body\_coverage.R                           |     |
+| Main          | 4   | E   | Rscripts/gene\_body\_coverage.R                           |     |
+| Main          | 4   | F   | Rscripts/gene\_body\_coverage.R                           |     |
+| Main          | 5   | A   | Rscripts/example\_coverage\_plots.R                       |     |
+| Main          | 5   | B   | Rscripts/operon\_analysis.R                               |     |
+| Main          | 5   | C   | Rscripts/operon\_analysis.R                               |     |
+| Supplementary | 1   | NA  | NA                                                        |     |
+| Supplementary | 2   | A   | Rscripts/bioanalyzer\_analysis.R                          |     |
+| Supplementary | 2   | B   | Rscripts/bioanalyzer\_analysis.R                          |     |
+| Supplementary | 3   | A   | Rscripts/raw\_read\_analysis.R                            |     |
+| Supplementary | 3   | B   | Rscripts/raw\_read\_analysis.R                            |     |
+| Supplementary | 4   | A   | Rscripts/raw\_read\_analysis.R                            |     |
+| Supplementary | 4   | B   | Rscripts/raw\_read\_analysis.R                            |     |
+| Supplementary | 4   | C   | Rscripts/raw\_read\_analysis.R                            |     |
+| Supplementary | 5   | A   | Rscripts/mapped\_read\_analysis.R                         |     |
+| Supplementary | 5   | B   | Rscripts/mapped\_read\_analysis.R                         |     |
+| Supplementary | 6   | A   | Rscripts/mapped\_read\_analysis.R                         |     |
+| Supplementary | 6   | B   | Rscripts/mapped\_read\_analysis.R                         |     |
+| Supplementary | 6   | C   | Rscripts/mapped\_read\_analysis.R                         |     |
+| Supplementary | 6   | D   | Rscripts/mapped\_read\_analysis.R                         |     |
+| Supplementary | 7   | A   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 7   | B   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 8   | A   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 8   | B   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 9   | A   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 9   | B   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 9   | C   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 9   | D   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 9   | E   | Rscripts/mapped\_read\_analysis2.R                        |     |
+| Supplementary | 10  | A   | Rscripts/seq\_depth.R                                     |     |
+| Supplementary | 10  | B   | Rscripts/seq\_depth.R                                     |     |
+| Supplementary | 10  | C   | Rscripts/seq\_depth.R                                     |     |
+| Supplementary | 11  | A   | Rscripts/salmon\_analysis.R                               |     |
+| Supplementary | 11  | B   | Rscripts/salmon\_analysis.R                               |     |
+| Supplementary | 12  | A   | NA                                                        |     |
+| Supplementary | 12  | B   | Rscripts/pychopper\_trimming.R                            |     |
+| Supplementary | 12  | C   | Rscripts/pychopper\_trimming.R                            |     |
+| Supplementary | 13  | A   | Rscripts/read\_end\_identities.R                          |     |
+| Supplementary | 13  | B   | Rscripts/read\_end\_identities.R                          |     |
+| Supplementary | 14  | A   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 14  | B   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 15  | A   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 15  | B   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 15  | C   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 16  | A   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 16  | B   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 17  | A   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 17  | B   | Rscripts/end5\_detection.R                                |     |
+| Supplementary | 18  | A   | Rscripts/end3\_detection.R                                |     |
+| Supplementary | 18  | B   | Rscripts/end3\_detection.R                                |     |
+| Supplementary | 19  |     | Rscripts/end3\_detection.R                                |     |
+| Supplementary | 20  | A   | Rscripts/end3\_detection.R                                |     |
+| Supplementary | 20  | B   | Rscripts/end3\_detection.R                                |     |
+| Supplementary | 21  | A   | Rscripts/operon\_analysis.R                               |     |
+| Supplementary | 21  | B   | Rscripts/operon\_analysis.R                               |     |
+| Supplementary | 22  | A   | NA                                                        |     |
+| Supplementary | 22  | B   | Rscripts/example\_coverage\_plots.R                       |     |
+| Supplementary | 22  | C   | Rscripts/example\_coverage\_plots.R                       |     |
+| Supplementary | 22  | D   | Rscripts/example\_coverage\_plots.R                       |     |
+| Supplementary | 23  | A   | NA                                                        |     |
+| Supplementary | 23  | B   | Rscripts/example\_coverage\_plots.R                       |     |
+| Supplementary | 23  | C   | Rscripts/example\_coverage\_plots.R                       |     |
+| Supplementary | 23  | D   | Rscripts/example\_coverage\_plots.R                       |     |
 
 ## Data analysis
 
