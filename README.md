@@ -4,7 +4,7 @@ sequencing of RNA and cDNA molecules
 <a href="https://orcid.org/0000-0001-7444-2408">Felix
 Grünberger<sup>1</sup></a>,
 <a href="https://orcid.org/0000-0002-0522-843X">Sébastien
-Ferreira-Cerca<sup>2°</sup></a>, and
+Ferreira-Cerca<sup>2</sup></a>, and
 <a href="https://orcid.org/0000-0002-0570-2517">Dina
 Grohmann<sup>1°</sup></a>  
 
@@ -46,6 +46,9 @@ Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Develop
 
 ## What can you find here
 
+Here you can find all of the Rscripts used during the analysis (compare
+)
+
 ## Data generation
 
 Libraries for Nanopore sequencing were prepared from poly(A)-tailed RNAs
@@ -65,6 +68,30 @@ single tube. Subsequent reactions were performed according to the
 protocols recommended by ONT. The libraries were sequenced on a MinION
 using R9.4 flow cells and subsequently, FAST5 files were generated using
 the recommended script in MinKNOW.
+
+## Figures
+
+``` r
+library(here)
+#> here() starts at /Users/felix/Documents/R/GITHUB/microbepore
+library(readxl)
+devtools::install_github("glin/reactable")
+#> Downloading GitHub repo glin/reactable@HEAD
+#> 
+#>      checking for file ‘/private/var/folders/m1/j6m28r317pngj1mw_l3v5zxw0000gn/T/RtmpqzTrr2/remotes1b6f62ccec15/glin-reactable-8197c00/DESCRIPTION’ ...  ✓  checking for file ‘/private/var/folders/m1/j6m28r317pngj1mw_l3v5zxw0000gn/T/RtmpqzTrr2/remotes1b6f62ccec15/glin-reactable-8197c00/DESCRIPTION’
+#>   ─  preparing ‘reactable’:
+#>      checking DESCRIPTION meta-information ...  ✓  checking DESCRIPTION meta-information
+#>   ─  checking for LF line-endings in source and make files and shell scripts
+#>   ─  checking for empty or unneeded directories
+#>   ─  building ‘reactable_0.2.3.9000.tar.gz’
+#>      
+#> 
+library(reactable)
+figure_tables <- read_xlsx(here("tables/Supplementary_Table2.xlsx"))
+reactable(figure_tables)
+```
+
+![](README-unnamed-chunk-2-1.png)<!-- -->
 
 ## Data analysis
 
