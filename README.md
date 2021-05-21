@@ -66,6 +66,9 @@ analysis, transcriptional unit annotation are based on custom
 
 ## Figures
 
+Here you can find links to the scripts used to make all of the figures
+based on numeric data.
+
 <details>
 <summary>
 click to expand
@@ -157,15 +160,19 @@ click to expand
 ### Sequencing files in original FAST5 format
 
 Sequencing files in original FAST5 format are publicly available in the
-Sequence Read Archive (SRA) (RNA001: XXX, all other datasets: XXX). The
-raw sequencing data in fast5 format have been submitted to the NCBI
-sequence read archive
-(<a href="https://www.ncbi.nlm.nih.gov/sra">SRA</a>) under BioProject
-accession number PRJNA632538.
+Sequence Read Archive [SRA](https://www.ncbi.nlm.nih.gov/sra) (RNA001:
+PRJNA632538, all other datasets: PRJNA731531).
 
 ### Basecalled and demultiplexed FASTQ files
 
-### Mapped BAM files (untrimmed reads)
+For easier access, basecalled & demultiplexed FASTQ files are available
+in a [Google Drive
+Folder](https://drive.google.com/drive/folders/1NumZwExaqJhcJ0Dzd2pf-buR77sA8cyd?usp=sharing).
+
+### Mapped BAM files
+
+Minimap2-mapped untrimmed reads are also available in the [Google Drive
+Folder](https://drive.google.com/drive/folders/1NumZwExaqJhcJ0Dzd2pf-buR77sA8cyd?usp=sharing).
 
 ------------------------------------------------------------------------
 

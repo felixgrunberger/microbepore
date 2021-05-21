@@ -17,11 +17,11 @@ modify_salmon_output <- function(input, method){
     left_join(gff_table, by = "gene") %>%
     mutate(type_fine = ifelse(type == "rRNA", as.character(locus_name), as.character(type)),
            type_fine = ifelse(type == "tRNA", "ncRNA", as.character(type_fine))) %>%
-    mutate(method = method,
+    mutate(sample = method,
            rpk = (counts/EffectiveLength*1000),
            TPM_hand = rpk/(sum(rpk, na.rm = T)/1000000),
            rpkm = (counts/(sum(counts)/1000000))/width*1000) %>%
-    dplyr::select(gene, type_fine, counts, method,rpkm, TPM_hand, salmon_tpm)
+    dplyr::select(gene, type_fine, counts, sample,rpkm, TPM_hand, salmon_tpm)
 }
 
 point_cor <-  function(mydf, myx, myy, myfill, mysize){
@@ -47,11 +47,6 @@ point_cor <-  function(mydf, myx, myy, myfill, mysize){
 # load & tidy data ----
 dir <- here()
 
-## genome data ====
-gff_table   <- read_in_gff(paste0(dir, "/data/genome_data/NC_000913.3.gff3"))
-ecoli_fasta <- readDNAStringSet(paste0(dir, "/data/genome_data/NC_000913.3.fasta"))
-names(ecoli_fasta) <- "chr"
-
 ## get names for rRNAs ====
 names_rRNA <- gff_table$id_name[gff_table$type == "rRNA"]
 
@@ -62,19 +57,21 @@ gff_table_gc <- gff_table %>%
 
 ## salmon data ====
 ### quantification from untrimmed files ####
+dir <- "/Volumes/EX_SSD"
 files          <- list.files(paste0(dir,"/data/salmon_data_notrimming/"), recursive = T,full.names = T, pattern = "quant.sf")
 salmon_frame   <- pmap_dfr(list(files,str_split_fixed(str_split_fixed(files, "\\/", n = 9)[,8],"_fu",2)[,1]),modify_salmon_output)
 
 ### write quantification data ####
-fwrite(salmon_frame, here("tables/salmon_table.tsv"), col.names = T, row.names = F, quote = F, sep = "\t")
+fwrite(salmon_frame, paste0(dir,"tables/salmon_table.tsv"), col.names = T, row.names = F, quote = F, sep = "\t")
+# salmon_frame <- vroom(paste0(dir, "/tables/salmon_table.tsv"))
 
 ### 1 dataset per column, 1 row per gene ####
 salmon_frame_wide <- salmon_frame %>%
-  dplyr::select(gene, type_fine, method, TPM_hand) %>%
-  dplyr::filter(method %in% c(bc_to_sample$sample, "SRR7533627", "SRR7533626", "illumina")) %>%
+  dplyr::select(gene, type_fine, sample, TPM_hand) %>%
+  dplyr::filter(sample %in% c(bc_to_sample$sample, "SRR7533627", "SRR7533626", "illumina")) %>%
   dplyr::filter(TPM_hand > 0 & !is.na(TPM_hand) & is.finite(TPM_hand)) %>%
-  dplyr::select(gene, type_fine, method, TPM_hand) %>%
-  pivot_wider(names_from = method, values_from = TPM_hand, values_fn = {sum}) %>%
+  dplyr::select(gene, type_fine, sample, TPM_hand) %>%
+  pivot_wider(names_from = sample, values_from = TPM_hand, values_fn = {sum}) %>%
   left_join(gff_table_gc) %>%
   dplyr::filter(!is.na(type_fine), type == "CDS") 
 

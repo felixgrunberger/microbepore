@@ -10,66 +10,11 @@ p <- function(v) {
 }
 
 perform_analysis <- function(dataset_choice, 
-                             tss_input = paste0(dir,"/data/tss_data/tss_data_notrimming.tsv"), 
-                             tts_input = paste0(dir,"/data/tts_data/tts_data_pychopper_auto_cutadapt_SSP_clipped.tsv"), 
-                             read_table = paste0(dir, "/data/mapped_data_pychopper_auto_cutadapt_clipped.tsv"), 
-                             merge_w = 20,
-                             cov_min = 3){
-  
-  # > get TSS
-  tss_p <- vroom(file = tss_input, num_threads = 8, progress = F) %>%
-    mutate(mode = str_sub(sample, 1,3),
-           TSS = ifelse(mode == "RNA" & strand == "+", TSS - 12, 
-                        ifelse(mode == "RNA" & strand == "-", TSS + 12,TSS))) %>%
-    dplyr::filter(TSS_type == "primary", type == "CDS") %>%
-    dplyr::filter(sample %in% dataset_choice) %>%
-    distinct(TSS, .keep_all = T) %>%
-    arrange(TSS) %>%
-    mutate(index = lag(TSS, default = 1) + as.integer(merge_w),
-           index1 = cumsum(ifelse(index >= TSS, 0, 1))+1) %>%
-    dplyr::group_by(index1) %>%
-    dplyr::filter(cov == max(cov),
-                  cov >= cov_min) %>%
-    ungroup() %>%
-    group_by(gene) %>%
-    dplyr::slice(which.max(cov)) %>%
-    ungroup() %>%
-    dplyr::select(id_name, TSS, TSS_type)
-  
-  # > get TTS
-  tts_p <- vroom(file = tts_input, num_threads = 8, progress = F) %>%
-      dplyr::left_join(old_new, by = c("dataset" = "old_name")) %>%
-      mutate(sample = new_name) %>%
-      dplyr::select(-new_name, -dataset) %>%
-      dplyr::filter(!is.na(sample)) %>%
-    mutate(mode = str_sub(sample, 1,3)) %>%
-    dplyr::filter(TTS_type == "primary", type == "CDS") %>%
-    dplyr::filter(sample %in% dataset_choice) %>%
-    distinct(TTS, .keep_all = T) %>%
-    arrange(TTS) %>%
-    mutate(index = lag(TTS, default = 1) + as.integer(merge_w),
-           index1 = cumsum(ifelse(index >= TTS, 0, 1))+1) %>%
-    dplyr::group_by(index1) %>%
-    dplyr::filter(cov == max(cov),
-                  cov >= cov_min) %>%
-    ungroup() %>%
-    group_by(gene) %>%
-    dplyr::slice(which.max(cov)) %>%
-    ungroup() %>%
-    dplyr::select(id_name, TTS, TTS_type)
+                             read_table = paste0(dir, "/data/mapped_data_pychopper_auto_cutadapt_clipped.tsv")){
   
   # > mod read table
-  working_table <- vroom(read_table, num_threads = 8) %>%
-    dplyr::left_join(old_new, by = c("method" = "old_name")) %>%
-    dplyr::rename(sample = new_name) %>%
-    dplyr::select(-method) %>%
-    dplyr::filter(!is.na(sample)) %>%
-    dplyr::filter(sample %in% dataset_choice) %>%
+  f <- vroom(read_table, num_threads = 8) %>%
     distinct(minion_read_name,.keep_all = T) %>%
-    left_join(tss_p, by = "id_name") %>%
-    left_join(tts_p, by = "id_name") 
-  
-  f <- working_table %>%
     dplyr::filter(soft_l < 10 & soft_r < 10 & soft_r < 10 & hard_r < 10 & width.x < (aligned_reads * 1.5)) %>%
     distinct(start, end, gene, .keep_all = T) %>%
     mutate(sample = dataset_choice)
@@ -98,7 +43,7 @@ find_reads_in_operons <- function(dataset_choice, gff_table = ecoli_gff_cds){
   # > within range --> overlapping by at least 100 bases
   type3 <- findOverlaps(query = gr2, subject = gr1, type = "any", minoverlap = 100)
   type3_df <- data.frame(x1[subjectHits(type3),],x2[queryHits(type3),])
-  
+
   # > each read is at the beginning a single operon
   read_name_to_operon <- data.table(minion_read_name = x1$minion_read_name, operon_name = 1:nrow(x1))
   
@@ -248,7 +193,7 @@ upset_table <- c(`DCS` = length(dcs_tu$operon) - length(inter_DCS_RNA) + length(
 ## for Upset comparison ALL ====
 
 ### load other data ####
-dir <- "/Volumes/EX_SSD/"
+
 #### regulon db ####
 OperonSet <- vroom(paste0(dir ,"data/comparison_data/Operon/OperonSet.txt"), comment = "#", col_names = F) %>%
   separate_rows(X6, sep = ",") %>%
@@ -382,5 +327,4 @@ ggplot(data = inter_all_quant_scaled, aes(x = size_operon, y = how_many, color =
   geom_point(shape = 21, color = "black", size = 4, alpha = 1) +
   scale_y_log10() +
   theme_Publication_white() 
-
 

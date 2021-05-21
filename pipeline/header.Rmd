@@ -1,0 +1,24 @@
+---
+title: ""
+output: github_document
+highlight: github
+bibliography: "/Users/felix/Documents/library_nanopore.bib"
+link-citations: true
+always_allow_html: true
+---
+
+***  
+
+This document provides a general workflow and overview of the tools we have used to analyse Nanopore RNA-seq data in prokaryotes, including:   
+- Basecalling and demultiplexing of raw FAST5 reads using `guppy`   
+- Trimming of reads using `pychopper`, `cutadapt` & `samclip`   
+- Mapping of reads to the genome using `minimap2`     
+- Gene abundance estimation using `salmon`  
+- Detection of transcript boundaries using `termseq_peaks`  
+- Read coverage analysis using `bedtools`   
+
+You can also have a look at a [protocol](https://link.springer.com/protocol/10.1007%2F978-1-0716-1307-8_31) recently published in Methods in Molecular Biology outlining different steps of Nanopore RNA-seq analysis.  
+
+***
+
+#### Table of Contents   

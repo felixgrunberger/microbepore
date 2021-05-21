@@ -171,7 +171,6 @@ plot_3end_distance <- function(trimtype = c("untrimmed", "trimmed"), compset = c
 
 ## Peak tables ====
 ### read in pychopper auto trimmed data > cutadapt polyA > cutadapt SSP > clipped removed ####
-dir <- "/Volumes/EX_SSD/"
 files <- list.files(paste0(dir,"/data/tts_data/tts_data_pychopper_auto_cutadapt_SSP_clipped/"), recursive = T, pattern = ".narrowPeak.counts")
 tts_data_trimmed <- tts_peaks_pipe("tts_data_pychopper_auto_cutadapt_SSP_clipped",
                                    str_split_fixed(str_split_fixed(str_split_fixed(files[which(1:length(files) %% 2 == 0)], "\\/", n = 3)[,3],".plus",2)[,1],"_fu",2)[,1],

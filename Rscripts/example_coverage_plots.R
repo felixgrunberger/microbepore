@@ -128,7 +128,7 @@ ecoli_gff_cds_selected <- ecoli_gff_cds %>%
   mutate(plot = "plot2")
 
 ## read in bam-like files to get single-read plots ====
-map_table_f <- perform_analysis(dataset_choice = sets[2]) %>%
+map_table_f <- perform_analysis(dataset_choice = "PCB109_PCR12_NOTEX_replicate4") %>%
   dplyr::filter(strand == strand_feature,
                 start %in% start_mode:end_mode, end %in% start_mode:end_mode) %>% 
   arrange(desc(width.x)) %>% 

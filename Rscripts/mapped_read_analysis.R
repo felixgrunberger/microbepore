@@ -71,6 +71,25 @@ mapped_frame   <- pmap_dfr(list(files[!str_detect(files, "remapped")],
 fwrite(mapped_frame, paste0(dir, "/data/mapped_data_no_trimming.tsv"), sep = "\t",col.names = T, nThread = 8)
 mapped_frame <- vroom(paste0(dir, "/data/mapped_data_no_trimming.tsv"))
 
+## Mean aligned_read length of the 100 longest read per library category ====
+mapped_frame %>%
+  dplyr::filter(identity > 80) %>%
+  mutate(mode = str_sub(sample,1,3)) %>%
+  group_by(mode) %>%
+  dplyr::select(mode, aligned_reads) %>%
+  top_n(100) %>%
+  summarise(what = mean(aligned_reads))
+
+## Mean aligned_read length of the 100 shortest read per library category ====
+mapped_frame %>%
+  dplyr::filter(identity > 80) %>%
+  mutate(mode = str_sub(sample,1,3)) %>%
+  group_by(mode) %>%
+  dplyr::select(mode, aligned_reads) %>%
+  top_n(-100) %>%
+  summarise(what = mean(aligned_reads))
+
+
 ## combine with sequencing summary file to identify unmapped reads ====
 summary_frame_sample  <- vroom(paste0(dir, "/data/summary_data_overview.tsv")) %>%
   group_by(sample) %>%
@@ -107,9 +126,6 @@ merged_frame$sample <- factor(merged_frame$sample,
                                       levels = rev(bc_to_sample$sample[c(1,10,11,8,9,2,4,3,5,6,7)]))
 merged_frame$mode <- factor(merged_frame$mode,
                                     levels = c("RNA", "DCS", "PCB"))
-
-## color palette ====
-cbf1 <- c("#EFEAFF","#F5AAA3","#CFCFCF", "#F6B2FB", "#ABC2DA")
 
 ## plotting ==== 
 

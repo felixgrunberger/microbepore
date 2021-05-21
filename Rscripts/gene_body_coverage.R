@@ -233,7 +233,7 @@ ggplot(data = cov_sets ,
   scale_x_continuous(limits = c(0,100), expand = c(0,0)) +
   scale_y_continuous(limits = c(0,100), expand = c(0,0)) +
   geom_ribbon(aes(fill = method, ymin = 0, ymax = C_mean_sum), alpha = 0.5, color = NA) +
-  scale_fill_manual(values = c("#AD9D86","#A1CEC2")) +
+  scale_fill_manual(values = rev(c("#AD9D86","#A1CEC2"))) +
   theme_Publication_white() +
   theme(panel.grid.major.x = element_blank(),
         panel.grid.major.y = element_line(color = "black")) +
@@ -268,7 +268,7 @@ cov_sets %>%
   ggplot() +
     geom_bar(aes(y = sample, x = prime5 - 100, fill = mode), 
              stat = "identity", color = "black") +
-    scale_x_continuous(limits = c(-35,35), expand = c(0,0)) +
+    scale_x_continuous(limits = c(-45,45), expand = c(0,0)) +
     theme_Publication_white() +
     scale_fill_manual(values = cbf1[c(2,5,3)]) +
     theme(panel.grid.major.y = element_blank(),
@@ -278,7 +278,7 @@ cov_sets %>%
 
 ### Cov3 - Fig. 4E #### 
 cov_sets %>%
-  dplyr::filter(perc_pos <= 90, method == "trimmed") %>%
+  dplyr::filter(perc_pos >= 90, method == "trimmed") %>%
   dplyr::group_by(sample) %>%
   summarise(prime3 = mean(C_mean_sum, na.rm = T)/median_C*100) %>%
   distinct(sample, .keep_all = T) %>%
@@ -287,7 +287,7 @@ cov_sets %>%
   ggplot() +
     geom_bar(aes(y = sample, x = prime3 - 100, fill = mode), 
              stat = "identity", color = "black") +
-    scale_x_continuous(limits = c(-35,35), expand = c(0,0)) +
+    scale_x_continuous(limits = c(-45,45), expand = c(0,0)) +
     theme_Publication_white() +
     scale_fill_manual(values = cbf1[c(2,5,3)]) +
     theme(panel.grid.major.y = element_blank(),
@@ -301,7 +301,6 @@ ggplot(data = cov_trimmed_sizes %>% mutate(mode = str_sub(sample,1,3)) %>% disti
   geom_bar(stat = "identity", position = position_dodge(), color = "black", 
            aes(alpha = read_group),size = 0.5) +
   scale_alpha_manual(values = rev(c(0,0.33,0.66,1))) +
-  scale_x_continuous(limits = c(0.0,2.5),expand = c(0,0)) +
+  scale_x_continuous(limits = c(0.0,1.5),expand = c(0,0)) +
   theme_Publication_white() +
   scale_fill_manual(values = cbf1[c(2,5,3)]) 
-
