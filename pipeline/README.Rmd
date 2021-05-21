@@ -60,8 +60,6 @@ microbepore/
         └── trimmed
 ```
 
-Relative paths in the custom `R` and `bash` scripts are included for the complete analysis.   
-
 
 ### Basecalling of raw reads using `guppy_basecaller`   
 After sequencing (and despite live-basecalling) all datasets in the  raw_FAST5 `r emo::ji("folder")` were re-basecalled using `guppy` (ont-guppy-for-mk1c v4.3.4) in high-accuracy mode (rna_r9.4.1_70bps_hac.cfg, dna_r9.4.1_450bps_hac.cfg) without quality filtering. The output files in FASTQ format were written to the basecalled `r emo::ji("folder")`.   
@@ -328,7 +326,7 @@ done
 For easier handling in the subsequent steps, DRS FASTQ files are also moved to the microbepore/data/FASTQ/full_length folder and adding *_full_length_all* to the filename.  
 
 #### Remove polyA-tails using [`cutadapt`](https://cutadapt.readthedocs.io/en/stable/)  
-To evaluate the influence of different trimming approaches on the accuracy of transcript boundary analysis, we applied additional 5´ and 3´ trimming steps using `cutadapt` v3.2 (42).  
+To evaluate the influence of different trimming approaches on the accuracy of transcript boundary analysis, we applied additional 5´ and 3´ trimming steps using `cutadapt` v3.2.  
 To this end, polyA sequences were removed from the 3´ends:   
 
 ```{bash, eval = F}
@@ -373,13 +371,12 @@ do
   foldername=$(echo $filename_extended | cut -d"_" -f 1,2,3)
   filename=${filename_extended%%.*}
   
-    
-    mkdir microbepore/data/FASTQ/cutadapt_SSP
-    mkdir microbepore/data/FASTQ/cutadapt_SSP/${foldername}
-    output=microbepore/data/FASTQ/cutadapt_SSP/${foldername}/${filename}
-    mkdir ${output}
-  
-   cutadapt \
+  mkdir microbepore/data/FASTQ/cutadapt_SSP
+  mkdir microbepore/data/FASTQ/cutadapt_SSP/${foldername}
+  output=microbepore/data/FASTQ/cutadapt_SSP/${foldername}/${filename}
+  mkdir ${output}
+
+  cutadapt \
     -g "TTTCTGTTGGTGCTGATATTGCTGGG" \
     -e 1 \
     -j 0 \
@@ -475,7 +472,7 @@ done
 ```
 
 ### Detection of transcript boundaries   
-The determination of enriched 5´and 3´ends was carried out in the same way, but independently of each other, and is briefly explained in the following: First, strand-specific read ends in bedgraph format were created from BAM files using [`bedtools genomecov`](https://bedtools.readthedocs.io/en/latest/) (-5 or -3 option, -bga). Next, the previously published [`Termseq_peaks`](https://pypi.org/project/termseq-peaks/) script (43) was used to call peaks for each sample individually without including replicates (https://github.com/NICHD-BSPC/termseq-peaks). This script is based on `scipy.signal.find_peaks`, which is running in the background of `Termseq_peaks` with lenient parameters (prominence=(None,None), width=(1,None), rel_height=0.75). However, we deliberately used `Termseq_peaks` since its ability to include replicates by applying an Irreproducible Discovery Rate method which can be applied to future studies. For end detection, only the leniently called peaks in the narrowPeak file were used after adding the number of counts for each position using `bedtools intersect`. 
+The determination of enriched 5´and 3´ends was carried out in the same way, but independently of each other, and is briefly explained in the following: First, strand-specific read ends in bedgraph format were created from BAM files using [`bedtools genomecov`](https://bedtools.readthedocs.io/en/latest/) (-5 or -3 option, -bga). Next, the previously published [`Termseq_peaks`](https://pypi.org/project/termseq-peaks/) script was used to call peaks for each sample individually without including replicates (https://github.com/NICHD-BSPC/termseq-peaks). This script is based on `scipy.signal.find_peaks`, which is running in the background of `Termseq_peaks` with lenient parameters (prominence=(None,None), width=(1,None), rel_height=0.75). However, we deliberately used `Termseq_peaks` since its ability to include replicates by applying an Irreproducible Discovery Rate method which can be applied to future studies. For end detection, only the leniently called peaks in the narrowPeak file were used after adding the number of counts for each position using `bedtools intersect`. 
 
 #### 5´end detection  
 5´end peak calling was performed in the following way:   

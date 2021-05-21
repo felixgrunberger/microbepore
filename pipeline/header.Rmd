@@ -7,7 +7,7 @@ link-citations: true
 always_allow_html: true
 ---
 
-***  
+
 
 This document provides a general workflow and overview of the tools we have used to analyse Nanopore RNA-seq data in prokaryotes, including:   
 - Basecalling and demultiplexing of raw FAST5 reads using `guppy`   

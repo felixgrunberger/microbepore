@@ -1,4 +1,3 @@
-------------------------------------------------------------------------
 
 This document provides a general workflow and overview of the tools we
 have used to analyse Nanopore RNA-seq data in prokaryotes, including:  

@@ -1,5 +1,4 @@
 
-------------------------------------------------------------------------
 
 This document provides a general workflow and overview of the tools we
 have used to analyse Nanopore RNA-seq data in prokaryotes, including:  
@@ -106,16 +105,13 @@ microbepore/
         └── trimmed
 ```
 
-Relative paths in the custom `R` and `bash` scripts are included for the
-complete analysis.
-
 ### Basecalling of raw reads using `guppy_basecaller`
 
 After sequencing (and despite live-basecalling) all datasets in the
 raw\_FAST5 📁 were re-basecalled using `guppy` (ont-guppy-for-mk1c
 v4.3.4) in high-accuracy mode (rna\_r9.4.1\_70bps\_hac.cfg,
 dna\_r9.4.1\_450bps\_hac.cfg) without quality filtering. The output
-files in FASTQ format were written to the basecalled 📁.
+files in FASTQ format were written to the basecalled 📂.
 
 > DRS & (PCR-)cDNA runs require different options.  
 > Config file selection based on selected accuracy, flowcell version,
@@ -161,7 +157,7 @@ guppy_basecaller \
 ```
 
 With the selected options `guppy` produces fast5\_pass, fast5\_fail,
-fastq, summary and report files that are written to the FASTQ 📂. FASTQ
+fastq, summary and report files that are written to the FASTQ 📁. FASTQ
 are not grouped in pass and fail groups since `--min_qscore` is not
 enabled. Multiple FASTQs can be merged using
 `cat microbepore/data/basecalled/run_id/*.fastq > microbepore/data/basecalled/run_id/run_id.fastq`.
@@ -190,7 +186,7 @@ guppy_barcoder \
 --progress_stats_frequency 60
 ```
 
-Multiple FASTQs are written to the FASTQ 📂 and can be merged with
+Multiple FASTQs are written to the FASTQ 📁 and can be merged with
 e.g. `cat microbepore/data/FASTQ/run_id/barcode01/*.fastq > microbepore/data/FASTQ/run_id/run_id_barcode01.fastq`.
 Barcode summary files are written to the FASTQ 📂 and can be moved to the
 barcode 📂 for clarity using
@@ -426,7 +422,7 @@ moved to the microbepore/data/FASTQ/full\_length folder and adding
 
 To evaluate the influence of different trimming approaches on the
 accuracy of transcript boundary analysis, we applied additional 5´ and
-3´ trimming steps using `cutadapt` v3.2 (42).  
+3´ trimming steps using `cutadapt` v3.2.  
 To this end, polyA sequences were removed from the 3´ends:
 
 ``` bash
@@ -472,13 +468,12 @@ do
   foldername=$(echo $filename_extended | cut -d"_" -f 1,2,3)
   filename=${filename_extended%%.*}
   
-    
-    mkdir microbepore/data/FASTQ/cutadapt_SSP
-    mkdir microbepore/data/FASTQ/cutadapt_SSP/${foldername}
-    output=microbepore/data/FASTQ/cutadapt_SSP/${foldername}/${filename}
-    mkdir ${output}
-  
-   cutadapt \
+  mkdir microbepore/data/FASTQ/cutadapt_SSP
+  mkdir microbepore/data/FASTQ/cutadapt_SSP/${foldername}
+  output=microbepore/data/FASTQ/cutadapt_SSP/${foldername}/${filename}
+  mkdir ${output}
+
+  cutadapt \
     -g "TTTCTGTTGGTGCTGATATTGCTGGG" \
     -e 1 \
     -j 0 \
@@ -585,8 +580,8 @@ following: First, strand-specific read ends in bedgraph format were
 created from BAM files using
 [`bedtools genomecov`](https://bedtools.readthedocs.io/en/latest/) (-5
 or -3 option, -bga). Next, the previously published
-[`Termseq_peaks`](https://pypi.org/project/termseq-peaks/) script (43)
-was used to call peaks for each sample individually without including
+[`Termseq_peaks`](https://pypi.org/project/termseq-peaks/) script was
+used to call peaks for each sample individually without including
 replicates (<https://github.com/NICHD-BSPC/termseq-peaks>). This script
 is based on `scipy.signal.find_peaks`, which is running in the
 background of `Termseq_peaks` with lenient parameters
