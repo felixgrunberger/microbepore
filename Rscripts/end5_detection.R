@@ -235,9 +235,18 @@ tss_data_untrimmed <- tss_peaks_pipe("tss_data_notrimming",
 
 fwrite(tss_data_untrimmed, paste0(dir, "/tables/tss_tables/tss_data_untrimmed.tsv"), col.names = T, sep = "\t")
 
+### write to Supplementary Table 4 ####
+tss_data_untrimmed %>%
+  dplyr::rename(end5 = TSS, end5_type = TSS_type) %>%
+  dplyr::select(gene, end5, end5_type, sample) %>%
+  dplyr::filter(!is.na(gene)) %>%
+  arrange(gene) %>%
+  write_xlsx(path = here("tables/Supplementary_Table4.xlsx"))
+
+
+
 ## TSS from other studies ====
 ### TEX-TSS-results ####
-dir <- "/Volumes/EX_SSD/"
 tex_tss <- read_xlsx(paste0(dir, "data/comparison_data/TSS/2014_zjb999093409sd1.xlsx"),sheet = "TSS Map MasterTable", skip = 2) %>%
   dplyr::filter(Condition == "LB_0.4", Primary == 1) %>%
   dplyr::rename(TSS = Pos, 

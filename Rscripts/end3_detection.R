@@ -180,6 +180,15 @@ tts_data_trimmed <- tts_peaks_pipe("tts_data_pychopper_auto_cutadapt_SSP_clipped
 
 fwrite(tts_data_trimmed, paste0(dir, "/tables/tts_tables/tts_data_trimmed.tsv"), col.names = T, sep = "\t")
 
+### write to Supplementary Table 5 ####
+tts_data_trimmed %>%
+  dplyr::rename(end3 = TTS, end3_type = TTS_type) %>%
+  dplyr::select(gene, end3, end3_type, sample) %>%
+  dplyr::filter(!is.na(gene)) %>%
+  arrange(gene) %>%
+  write_xlsx(path = here("tables/Supplementary_Table5.xlsx"))
+
+
 ### read in untrimmed - raw mapped data ####
 files <- list.files(paste0(dir,"/data/tts_data/tts_data_notrimming/"), recursive = T, pattern = ".narrowPeak.counts")
 tts_data_untrimmed <- tts_peaks_pipe("tts_data_notrimming",
@@ -189,6 +198,9 @@ tts_data_untrimmed <- tts_peaks_pipe("tts_data_notrimming",
                                      files[which(1:length(files) %% 2 == 1)])
 
 fwrite(tts_data_untrimmed, paste0(dir, "/tables/tts_tables/tts_data_untrimmed.tsv"), col.names = T, sep = "\t")
+
+
+
 
 ## TTS from other studies ====
 ### Term-seq (Dar et al) ####

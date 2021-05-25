@@ -14,7 +14,7 @@ modify_salmon_output <- function(input, method){
     select(counts, gene, salmon_tpm,EffectiveLength) %>%
     mutate(gene = str_split_fixed(gene,"-",2)[,2]) %>%
     arrange(desc(counts)) %>%
-    left_join(gff_table, by = "gene") %>%
+    left_join(ecoli_gff, by = "gene") %>%
     mutate(type_fine = ifelse(type == "rRNA", as.character(locus_name), as.character(type)),
            type_fine = ifelse(type == "tRNA", "ncRNA", as.character(type_fine))) %>%
     mutate(sample = method,
@@ -48,22 +48,33 @@ point_cor <-  function(mydf, myx, myy, myfill, mysize){
 dir <- here()
 
 ## get names for rRNAs ====
-names_rRNA <- gff_table$id_name[gff_table$type == "rRNA"]
+names_rRNA <- ecoli_gff$id_name[ecoli_gff$type == "rRNA"]
 
 ## mean gc content per gene table ==== 
-gff_table_gc <- gff_table %>%
+gff_table_gc <- ecoli_gff %>%
   dplyr::rowwise() %>%
   dplyr::mutate(gc = GC.content(as.DNAbin(ecoli_fasta$chr[start_feature:end_feature])))
 
 ## salmon data ====
 ### quantification from untrimmed files ####
-dir <- "/Volumes/EX_SSD"
 files          <- list.files(paste0(dir,"/data/salmon_data_notrimming/"), recursive = T,full.names = T, pattern = "quant.sf")
 salmon_frame   <- pmap_dfr(list(files,str_split_fixed(str_split_fixed(files, "\\/", n = 9)[,8],"_fu",2)[,1]),modify_salmon_output)
 
 ### write quantification data ####
-fwrite(salmon_frame, paste0(dir,"tables/salmon_table.tsv"), col.names = T, row.names = F, quote = F, sep = "\t")
+fwrite(salmon_frame, paste0(dir,"/tables/salmon_table.tsv"), col.names = T, row.names = F, quote = F, sep = "\t")
 # salmon_frame <- vroom(paste0(dir, "/tables/salmon_table.tsv"))
+
+### write to Supplementary Table 3 ####
+salmon_Table %>%
+  dplyr::rename(TPM = TPM_hand,
+                sample = method) %>%
+  dplyr::select(gene, TPM, sample) %>%
+  dplyr::mutate(sample = ifelse(sample == "illumina", "SRR1927169", sample)) %>%
+  dplyr::filter(!is.na(sample)) %>%
+  distinct(gene, sample, .keep_all = T)  %>%
+  pivot_wider(names_from = sample, values_from = TPM) %>%
+  arrange(gene) %>%
+  write_xlsx(path = here("tables/Supplementary_Table3.xlsx"))
 
 ### 1 dataset per column, 1 row per gene ####
 salmon_frame_wide <- salmon_frame %>%
