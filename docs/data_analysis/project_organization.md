@@ -1,10 +1,11 @@
 ---
 layout: page
 title: Project organization
-permalink: /project_organization/
-nav_order: 5
-has_children: false
+parent: Data analysis
+nav_order: 0
+toc: False
 ---
+
 
 
 ## Project organization   

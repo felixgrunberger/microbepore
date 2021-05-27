@@ -8,22 +8,39 @@ has_children: false
 
 ## Sample preparation  
 {: .no_toc }
-
+____
+<details open markdown="block">
+  <summary>
+    Table of contents
+  </summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details> 
+____
 
-### Experimental design  
+### Cell growth and RNA extraction  
+- Grow *Escherichia coli* K-12 MG1655 cells in rich medium (10 g tryptone, 5 g yeast extract, 5 g NaCl per liter, pH 7.2) to an OD<sub>600nm</sub> of 0.5-0.6 (or your organism of choice in the conditions you´re interested in)   
+- Stabilize RNAs by adding two volumes of RNAlater (Thermo Fisher Scientific)  
+- Store cultures at -20°C or harvest cells by centrifugation at 4°C  
+- Extract RNA with the method of your choice. We (and others) had good experience with the RNeasy Kit from Qiagen  
+> **Note:** Silica-membrane columns have a cut-off size of about 200 nucleotides 
+- Check integrity of total RNA (Bioanalyzer)   
+> **Note:** RNA degradation has a massive influence on the results of your experiment  
 
-### RNA extraction and treatment  
-#### Cell growth and RNA extraction   
-Escherichia coli K-12 MG1655 cells were grown in rich medium (10 g tryptone, 5 g yeast extract, 5 g NaCl per liter, pH 7.2) to an OD600nm of 0.5-0.6. To stabilize RNAs, two volumes of RNAlater (Thermo Fisher Scientific) were immediately added to the cultures and stored at -20°C until cells were harvested by centrifugation at 4°C.
-Total RNA of all samples except RNA001 was extracted using RNeasy Mini Kit (Qiagen) according to the manufacturer´s instructions. RNA001 RNA was purified using the Monarch® Total RNA Miniprep Kit (New England Biolabs). The integrity of total RNA from E. coli was assessed via a Bioanalyzer (Agilent) run using the RNA 6000 Pico Kit (Agilent), and only RNAs with RNA integrity numbers (RIN) above 9.5 were used for subsequent treatments and sequencing. 
+### Poly(A) tailing, rRNA depletion and additional RNA treatment   
+- Perform **poly(A)–tailing** using the *E. coli* poly(A) polymerase (New England Biolabs):  
+  - Incubate RNAs at 70°C for 2 min and snap cool it on a pre-chilled freezer block  
+  - Incubate 5 µg RNA, 20 units poly(A) polymerase, 5 µl reaction buffer, 1 mM ATP for 15 min at 37°C in a total reaction volume of 50 µl. 
+  - Stop and clean up the reaction following the RNeasy Micro clean-up protocol (Qiagen)  
+  - Evaluate efficiency of poly(A)-tailing (Bioanalyzer, peaks of rRNAs)  
+- Perform **rRNA depletion**, e.g. using the [Pan-Prokaryote riboPOOL by siTOOLs](https://www.sitoolsbiotech.com/ribopools.php) (Clean-up can also be performed using the RNeasy protocol)    
+> **Note:** After depletion, only **~5%** of the initial RNA input quantity are left.     
+- Perform additional treatment of your choice and clean-up, e.g. using the Terminator 5´-Phosphate-Dependent Exonuclease (TEX, Lucigen). 
 
-
-#### Poly(A) tailing, rRNA depletion and additional RNA treatment   
-RNAs were heat incubated at 70°C for 2 min and snap cooled on a pre-chilled freezer block before poly(A)–tailing using the E. coli poly(A) polymerase (New England Biolabs). Briefly, 5 µg RNA, 20 units poly(A) polymerase, 5 µl reaction buffer and 1 mM ATP were incubated for 15 min at 37°C in a total reaction volume of 50 µl. To stop and clean up the reaction, poly(A)-tailed RNAs were purified following the RNeasy Micro clean-up protocol (Qiagen), which was used for all subsequent RNA clean-ups. The efficiency of poly(A)-tailing was evaluated via a Bioanalyzer run. rRNA depletion was performed using the Pan-Prokaryote riboPOOL by siTOOLs, which effectively removes rRNAs from E. coli. For TEX-treated samples, partial digestion of RNAs that are not 5´-triphosphorylated (e.g. tRNAs, rRNAs) was achieved by incubation of the RNA with the Terminator 5´-Phosphate-Dependent Exonuclease (TEX, Lucigen). 
-For the RNA001 sample, 10 µg of RNA were incubated with 1 unit TEX, 2 µl TEX reaction buffer (Lucigen) and 0.5 µl RiboGuard RNase Inhibitor (Lucigen) in a total volume of 20 µl for 60 minutes at 30°C. Additionally, 20 ng of rRNA-depleted samples subsequently used in the PCR-cDNA workflow were TEX-treated using the same enzyme and buffer concentrations but reducing the reaction time to 15 minutes. All reactions were terminated by adding EDTA and the RNAs cleaned up.
-Before library preparation, the extent of remaining buffer and DNA contamination were tested by performing standard spectroscopic measurements (Nanodrop One) and using the Qubit 1X dsDNA HS assay kit (Thermo Fisher Scientific). Input RNAs were finally quantified using the Qubit RNA HS assay kit. 
+> **Important**: Before library preparation, check: 
+1. extent of remaining buffer and DNA contamination that could have a negative impact on your library and 
+2. RNA size and quantity (Qubit) to determine molarities as accurately as possible  
 
 
 ### Library preparation  
