@@ -153,7 +153,6 @@ sets <- c("RNA001_Ecoli_TEX_replicate1",
           "PCB109_PCR12_Ecoli_NOTEX_replicate4",
           "DCS109_Ecoli_NOTEX_replicate2")
 
-dir <- "/Volumes/EX_SSD/"
 RNA_operon <- find_reads_in_operons(dataset_choice = sets[1]) %>% 
   mutate(sample = sets[1])
 PCB_operon <- find_reads_in_operons(dataset_choice = sets[2]) %>% 
@@ -161,8 +160,19 @@ PCB_operon <- find_reads_in_operons(dataset_choice = sets[2]) %>%
 DCS_operon <- find_reads_in_operons(dataset_choice = sets[3]) %>% 
   mutate(sample = sets[3])
 
+### write to Supplementary Table 6 ####
+rbindlist(list(RNA_operon,
+               PCB_operon,
+               DCS_operon)) %>%
+  ungroup() %>%
+  dplyr::rename(gene = genes_in_operon) %>%
+  dplyr::select(seqnames,gene, genes_in_operon_all, size_operon, operon_seen, covered_by, perc_seen, sample) %>%
+  write_xlsx(path = here("tables/Supplementary_Table6.xlsx"))
+
+
+  
+
 ## write to output tables ====
-dir <- here()
 write_operon(RNA_operon)
 write_operon(PCB_operon)
 write_operon(DCS_operon)
