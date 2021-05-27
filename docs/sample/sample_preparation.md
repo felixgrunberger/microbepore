@@ -34,18 +34,29 @@ ____
   - Incubate 5 µg RNA, 20 units poly(A) polymerase, 5 µl reaction buffer, 1 mM ATP for 15 min at 37°C in a total reaction volume of 50 µl. 
   - Stop and clean up the reaction following the RNeasy Micro clean-up protocol (Qiagen)  
   - Evaluate efficiency of poly(A)-tailing (Bioanalyzer, peaks of rRNAs)  
-- Perform **rRNA depletion**, e.g. using the [Pan-Prokaryote riboPOOL by siTOOLs](https://www.sitoolsbiotech.com/ribopools.php) (Clean-up can also be performed using the RNeasy protocol)    
-> **Note:** After depletion, only **~5%** of the initial RNA input quantity are left.     
-- Perform additional treatment of your choice and clean-up, e.g. using the Terminator 5´-Phosphate-Dependent Exonuclease (TEX, Lucigen). 
+  
+> **Note:** Efficiency of poly(A)-tailing is a critical step, but may not work equally well in other organisms. 
 
-> **Important**: Before library preparation, check: 
-1. extent of remaining buffer and DNA contamination that could have a negative impact on your library and 
-2. RNA size and quantity (Qubit) to determine molarities as accurately as possible  
+- Perform **rRNA depletion**, e.g. using the [Pan-Prokaryote riboPOOL by siTOOLs](https://www.sitoolsbiotech.com/ribopools.php) (Clean-up can also be performed using the RNeasy protocol)   
+
+> **Note:** After depletion, only **~5%** of the initial RNA input quantity are left.     
+
+- Perform additional treatment of your choice and clean-up, e.g. using the Terminator 5´-Phosphate-Dependent Exonuclease (TEX, Lucigen).  
+
+> **Important**: Before library preparation: 
+>
+> 1. Check extent of remaining buffer and DNA contamination that could have a negative impact  on your library 
+> 2. Check RNA size and quantity (Qubit) to determine molarities as accurately as possible  
 
 
 ### Library preparation  
-Libraries for Nanopore sequencing were prepared from poly(A)-tailed RNAs according to the protocols provided by Oxford Nanopore (Oxford Nanopore Technologies Ltd, Oxford, UK) for direct sequencing of native RNAs (SQK-RNA001, SQK-RNA002), direct cDNA native barcoding (SQK-DCS109 with EXP-NBD104) and PCR-cDNA barcoding (SQK-PCB109) with the following minor modifications: Agencourt AMPure XP magnetic beads (Beckman Coulter) in combination with 1 µl of RiboGuard RNase Inhibitor (Lucigen) were used instead of the recommended Agencourt RNAclean XP beads to clean up samples. For reverse transcription, Maxima H Minus Reverse Transcriptase (Thermo Fisher Scientific) was not only used for all cDNA samples, but also for the RNA002 samples (SuperScript III Reverse Transcriptase from Thermo Fisher Scientific used for RNA001 sample).  
-The amount of input RNA, barcoding strategy, number of PCR cycles, extension times and library preparation kit used can be found in Supplementary Table 1 and are also summarized in part in the following Figure.
+- Libraries for Nanopore sequencing were prepared from poly(A)-tailed RNAs according to the protocols provided by [ONT](https://nanoporetech.com)  
+- **Critical steps**:  
+  - Input quality & amount of RNA: Especially important for **DRS**, since you cannot get rid of excess amounts of RNA used as input. In that case, many transcripts that do not carry a motor protein are loaded onto the flowcell and overall have a negative impact on throughput/quality.         
+  - Reverse transcription: Maxima RT H Minus performs well and can be adjusted to high GC content    
+  - PCR for **PCR-cDNA** protocols: number of cycles adjusted to input amount (use minimal number cycles possible), extension time (adjust for longest transcripts you expect)  
+  - Beads to cDNA ratio (**PCR-cDNA**): Enrichment for longer transcripts using a 0.5 ratio   
+  - Molarity of ready-to-load library (check size & quantity): Avoid overloading of your flowcells! We observed that especially small fragments lead to a poor translocation spped and quality of reads.   
 
 
 
