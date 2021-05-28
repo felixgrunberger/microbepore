@@ -12,5 +12,5 @@ To facilitate easier access basecalled and demultiplexed FASTQ, mapped BAM files
 All scripts and code used in this work are available on GitHub (https://github.com/felixgrunberger/microbepore)   
 
 ## Original FAST5 data   
-Sequencing files in original FAST5 format are publicly available in the Sequence Read Archive SRA (RNA001: [PRJNA632538]https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA632538), all other datasets: [PRJNA731531](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA731531)). 
+Sequencing files in original FAST5 format are publicly available in the Sequence Read Archive SRA (RNA001: [PRJNA632538](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA632538), all other datasets: [PRJNA731531](https://www.ncbi.nlm.nih.gov/sra/?term=PRJNA731531)). 
 
