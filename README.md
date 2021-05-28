@@ -2,7 +2,7 @@ Expanding the transcriptomic toolbox in prokaryotes by Nanopore
 sequencing of RNA and cDNA molecules
 ================
 <a href="https://orcid.org/0000-0001-7444-2408">Felix
-Grünberger<sup>1</sup></a>,
+Grünberger<sup>1°</sup></a>,
 <a href="https://orcid.org/0000-0002-0522-843X">Sébastien
 Ferreira-Cerca<sup>2</sup></a>, and
 <a href="https://orcid.org/0000-0002-0570-2517">Dina
