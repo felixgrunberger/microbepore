@@ -1,8 +1,10 @@
 ---
 layout: page
-title: Operon detection
+title: Transcriptional unit analysis 
 parent: Data analysis
-nav_order: 7
+nav_order: 9
 ---
 
-## Operon detection
+## Transcriptional unit analysis   
+
+
