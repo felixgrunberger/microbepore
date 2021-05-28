@@ -19,7 +19,7 @@ If you´re interested you can read our previous pre-print on biorxiv: Exploring 
 
 <br> 
 
-[About the project](project){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 } [Find the code on GitHub](https://github.com/felixgrunberger/microbepore){: .btn .fs-5 .mb-4 .mb-md-0 }
+[About the project](project){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 } [Find the code on GitHub :octocat:](https://github.com/felixgrunberger/microbepore){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 
 <br> 
