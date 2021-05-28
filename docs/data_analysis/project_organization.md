@@ -1,46 +1,36 @@
 ---
 layout: page
-title: Project organization
+title: Project organisation
 parent: Data analysis
-nav_order: 0
+nav_order: 1
 toc: False
 ---
 
-
-
-## Project organization   
-The easiest way to find your way around your project is to 
-
-```R
-library(here)
-#> here() starts at /Users/jenny/rrr/here_here
-here()
-#> [1] "/Users/jenny/rrr/here_here"
-
-```
+## Project organisation   
+It is good practice to keep all files for your project in the same project-specific folder. A well-organised folder structure helps you to have a good overview and facilitates access to the files.  
+For project standardisation and folder creation you can use something like [`project templates`](https://github.com/paeselhz/rstudioProjectTemplate) in R or make your own structure. For example, our project for the RNA-seq analysis looks something like this:   
 
 ```bash
 microbepore/
+├── doc/
+    ├── ...
+    ├── ...
+    └── ...
+├── pipeline/
+    ├── ...
+    ├── ...
+    └── ...    
+├── Rscripts/
+    ├── ...
+    ├── ...
+    └── ...
 ├── data/
-|   ├── genome_data
-|   ├── tidy_data
-|   ├── summary_data
-|   ├── mapped_data
-|   ├── guppy_data
-|   ├── fastq_data
-|   ├── coverage_data
-|   ├── meme_data
-|   ├── enolase_data
-|   ├── poly_data
-|   ├── tombo_data
-|   └── operon_data
-├── Rscrips
-├── figures
-├── tables/
-|   ├── tss_tables
-|   ├── tts_tables
-|   ├── tu_tables
-|   └── counts_tables
-├── LICENSE
-└── README
+    ├── ...
+    ├── ...
+    └── ...
+├── microbepore.Rproj/
+├── README.Rmd/
+└── LICENSE/
 ```
+One thing that really helps setting up your R session for a better workflow (especially if you are new to working with many data & if you like to work with R) is setting all up in an RStudio project and using the `here` package that makes it easier to reference folders. A demonstration of the benefits can be found in [Jenny Bryan´s GitHub](https://github.com/jennybc/here_here).     
+

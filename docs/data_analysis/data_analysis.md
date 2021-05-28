@@ -2,12 +2,9 @@
 layout: page
 title: Data analysis
 permalink: /data_analysis/
-nav_order: 6
+nav_order: 5
 has_children: true
 ---
 
 ## Data analysis  
-Raw reads in `fast5` format can be basecalled using guppy .
-
-For basecalling on MK1C we noticed that using the gui of the MK1C does not offer the fastest option for basecalling. 
-
+Here, you can find a description of the workflow using publicly available tools used to basecall, demultiplex, trim, map and count data. Additionally, we comment on custom Rscripts we used to perform the downstream analysis, including quality control, annotation of transcript boundaries, gene body coverage analysis and transcriptional unit annotation.   

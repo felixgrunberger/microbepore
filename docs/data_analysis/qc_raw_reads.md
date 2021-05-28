@@ -2,7 +2,7 @@
 layout: page
 title: Quality control of raw reads
 parent: Data analysis
-nav_order: 2
+nav_order: 3
 ---
 
 ## Quality control of raw reads 
