@@ -128,12 +128,12 @@ guppy_barcoder \
 --progress_stats_frequency 60
 ```
 
-Multiple FASTQs are written to the FASTQ `r emo::ji("folder")` and can be merged with e.g. `cat microbepore/data/FASTQ/run_id/barcode01/*.fastq > microbepore/data/FASTQ/run_id/run_id_barcode01.fastq`. Barcode summary files are written to the FASTQ `r emo::ji("folder")` and can be moved to the barcode `r emo::ji("folder")` for clarity using    
+Multiple FASTQs are written to the FASTQ `r emo::ji("folder")` and can be merged with e.g. `cat microbepore/data/FASTQ/run_id/barcode01/*.fastq > microbepore/data/FASTQ/run_id/run_id_barcode01.fastq`. Barcode summary files are written to the FASTQ `r emo::ji("folder")` and can be moved to the barcode `r emo::ji("folder")`.    
 
 ### Mapping of reads to the genome using [`minimap2`](https://github.com/lh3/minimap2)      
 Files were mapped to the reference genome from *Escherichia coli* K-12 MG1655 ([GenBank](https://www.ncbi.nlm.nih.gov/nuccore/545778205): U00096.3) using `minimap2` (Release 2.18-r1015).  
 Genome FASTA and GFF3 files have been downloaded from [GenBank](https://www.ncbi.nlm.nih.gov/nuccore/545778205). 
-Output alignments in the SAM format were generated with `-ax splice -k14` for **Nanopore 2D cDNA-seq** and `-ax splice, -uf, -k14` for **DRS** with i) `-p 0.99`, to return primary and secondary mappings and ii) with `--MD`, to include the MD tag for calculating mapping identities. Alignment files were further converted to BAM files, sorted and indexed using [`SAMtools`(https://github.com/samtools/).    
+Output alignments in the SAM format were generated with `-ax splice -k14` for **Nanopore cDNA-seq** and `-ax splice, -uf, -k14` for **DRS** with i) `-p 0.99`, to return primary and secondary mappings and ii) with `--MD`, to include the MD tag for calculating mapping identities. Alignment files were further converted to BAM files, sorted and indexed using [`SAMtools`(https://github.com/samtools/).    
 To analyse single reads in more detail with respect to the RNA type (mRNA, rRNA, other ncRNA, unspecified) they map to, BAM files were first converted back to FASTQ using [`bedtools`](https://bedtools.readthedocs.io/en/latest/) v2.29.2. Next FASTQ files were remapped to a transcriptome file using `minimap2` with the previously mentioned parameters to assign single read names with feature IDs. The transcript file was made using [`gffread`](https://github.com/gpertea/gffread) with `gffread microbepore/data/genome/NC_000913.3.gff -g microbepore/data/genome/NC_000913.3.fasta -w microbepore/data/genome/NC_000913.3.transcripts.fasta`.   
 
 ```{bash, eval = F}
@@ -185,6 +185,7 @@ do
   samtools view -bS ${output}/${filename}.remapped.sam -o ${output}/${filename}.remapped.bam
   samtools sort ${output}/${filename}.remapped.bam -o ${output}/${filename}.remapped.sorted.bam
   samtools index ${output}/${filename}.remapped.sorted.bam
+done
 ```
 
 
