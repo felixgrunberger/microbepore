@@ -167,13 +167,12 @@ PRJNA632538, all other datasets: PRJNA731531).
 
 For easier access, basecalled & demultiplexed FASTQ files are available
 in a [Google Drive
-Folder](https://drive.google.com/drive/folders/1RO1yIAXWSnKgfe4-XuYFUCioHnHHLrpC?usp=sharing) and on [Zenodo](https://zenodo.org/records/4879174).
-
+Folder](https://drive.google.com/drive/folders/1RO1yIAXWSnKgfe4-XuYFUCioHnHHLrpC?usp=sharing) and on [Zenodo](zenodo.org/record/4879174#.YLSkjy221pQ).
 
 ### Mapped BAM files
 
 Minimap2-mapped untrimmed reads are also available in the [Google Drive
-Folder](https://drive.google.com/drive/folders/1RO1yIAXWSnKgfe4-XuYFUCioHnHHLrpC?usp=sharing) and on [Zenodo](https://zenodo.org/records/4879174).
+Folder](https://drive.google.com/drive/folders/1RO1yIAXWSnKgfe4-XuYFUCioHnHHLrpC?usp=sharing) and on [Zenodo](zenodo.org/record/4879174#.YLSkjy221pQ).
 
 ------------------------------------------------------------------------
 
