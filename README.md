@@ -38,10 +38,6 @@ chemistry
 - Native cDNA sequencing (cDNA) using DCS109 chemistry  
 - PCR-cDNA sequencing (PCR-cDNA) using PCB109 chemistry
 
-The repository is currently actively developed.
-
-[![Active
-Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)](https://gist.github.com/cheerfulstoic/d107229326a01ff0f333a1d3476e068d)
 
 ## Full documentation here
 
